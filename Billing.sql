@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS bill (
     taxes DECIMAL(10, 2) NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
     bill_date DATE NOT NULL,
-    bill_status VARCHAR(20) NOT NULL, --- paid,unpaid,overdue
+    bill_status VARCHAR(20) NOT NULL --- paid,unpaid,overdue
     
 );
 
