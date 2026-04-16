@@ -1,0 +1,25 @@
+/ratingEngine/target/
+# 🔴 Maven target folder (compiled files)
+target/
+
+# 🔴 Compiled class files
+*.class
+
+# 🔴 Logs
+*.log
+
+# 🔴 IDE files
+.idea/
+*.iml
+.vscode/
+
+# 🔴 OS files
+.DS_Store
+Thumbs.db
+
+# 🔴 Environment / configs
+.env
+
+# 🔴 Temporary files
+*.tmp
+*.swp
