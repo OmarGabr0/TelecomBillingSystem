@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS cdr (
 );
 --- rated cdr after rating 
 CREATE TABLE IF NOT EXISTS rated_cdr (
+msisdn VARCHAR(15) NOT NULL REFERENCES contract (msisdn) ON DELETE CASCADE,
 rated_cdr_id SERIAL PRIMARY KEY,
 cdr_id INT NOT NULL REFERENCES cdr(cdr_id) ON DELETE CASCADE,
 cdr_status VARCHAR(5) NOT NULL, --- rated,processing,corrupted

@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
+//RatingEngine.java: The orchestrator. It loops through CDRs, calls the Resolver and Processor, and creates a RatedCdr result.
 package com.telecosmart.ratingengine;
 
 /**
