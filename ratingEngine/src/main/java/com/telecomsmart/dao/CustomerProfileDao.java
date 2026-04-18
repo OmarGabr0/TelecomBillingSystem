@@ -40,7 +40,7 @@ public class CustomerProfileDao {
     public Map<String, CustomerProfile> getCustomerProfiles() {
         Map<String, CustomerProfile> customerProfiles = new HashMap<>();
         String query = """
-                SELECT msisdn, credit_limit, balance, rateplan_id, free_units_remaining
+                SELECT msisdn, credit_limit, ror_usage, rateplan_id, free_units_remaining
                 FROM customer_profile
                 """;
         Connection conn = connect();
@@ -54,7 +54,7 @@ public class CustomerProfileDao {
                 CustomerProfile customerProfile = new CustomerProfile();
                 customerProfile.setMsisdn(rs.getString("msisdn"));
                 customerProfile.setCreditLimit(rs.getInt("credit_limit"));
-                customerProfile.setBalance(rs.getBigDecimal("balance"));
+                customerProfile.setRorUsage(rs.getBigDecimal("ror_usage"));
                 customerProfile.setRatePlanId(rs.getInt("rateplan_id"));
                 customerProfile.setFreeUnitsRemaining(rs.getLong("free_units_remaining"));
                 customerProfiles.put(customerProfile.getMsisdn(), customerProfile);
@@ -72,13 +72,13 @@ public class CustomerProfileDao {
             return false;
         }
         String query = """
-                INSERT INTO customer_profile (msisdn, credit_limit, balance, rateplan_id, free_units_remaining)
+                INSERT INTO customer_profile (msisdn, credit_limit, ror_usage, rateplan_id, free_units_remaining)
                 VALUES (?, ?, ?, ?, ?)
                 """;
         try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, customerProfile.getMsisdn());
             ps.setInt(2, customerProfile.getCreditLimit());
-            ps.setBigDecimal(3, customerProfile.getBalance());
+            ps.setBigDecimal(3, customerProfile.getRorUsage());
             ps.setInt(4, customerProfile.getRatePlanId());
             ps.setLong(5, customerProfile.getFreeUnitsRemaining());
             ps.executeUpdate();
