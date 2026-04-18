@@ -23,3 +23,6 @@ Thumbs.db
 # 🔴 Temporary files
 *.tmp
 *.swp
+
+# 🔴 Database Connection
+/ratingEngine/src/main/java/com/telecomsmart/services/dbconn.java

@@ -4,6 +4,7 @@ package com.telecomsmart.services;
  import com.telecomsmart.model.Contract;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,6 @@ public class DataLoader {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    
-    
+        return contractMap;
+    }
 }

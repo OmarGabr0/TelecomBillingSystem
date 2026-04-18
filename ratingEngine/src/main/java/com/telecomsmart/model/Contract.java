@@ -80,7 +80,7 @@ public class Contract {
         this.customerId = customerId;
     }
 
-    public void setRateplanId(Integer rateplanId) {
+    public void setRatePlanId(Integer rateplanId) {
         this.rateplanId = rateplanId;
     }
 
