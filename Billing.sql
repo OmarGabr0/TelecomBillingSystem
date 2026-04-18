@@ -136,3 +136,14 @@ cdr_status VARCHAR(5) NOT NULL, --- rated,processing,corrupted
 processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 
 );
+
+
+
+------ Table for Rating Engine tracking the customer profiles ---- 
+CREATE TABLE IF NOT EXISTS customer_profile (
+    msisdn VARCHAR(15) NOT NULL REFERENCES contract (msisdn) ON DELETE CASCADE,
+    credit_limit INT NOT NULL,
+    balance DECIMAL(10, 2) NOT NULL,
+rateplan_id INT NOT NULL REFERENCES rateplan (rateplan_id) ON DELETE CASCADE,
+free_units_remaining BIGINT NOT NULL
+);
