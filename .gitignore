@@ -23,3 +23,7 @@ Thumbs.db
 # 🔴 Temporary files
 *.tmp
 *.swp
+
+/AggregationEngine/src/main/resources/application.properties
+
+/AggregationEngine/target/*
