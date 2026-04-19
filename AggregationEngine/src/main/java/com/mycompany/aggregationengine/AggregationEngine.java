@@ -4,6 +4,9 @@
 
 package com.mycompany.aggregationengine;
 
+import java.sql.Connection;
+
+
 /**
  *
  * @author mohamed
@@ -11,6 +14,7 @@ package com.mycompany.aggregationengine;
 public class AggregationEngine {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        Connection conn = DatabaseConnection.getConnection();
+        System.out.println(conn != null ? "OK" : "FAIL");
     }
 }
