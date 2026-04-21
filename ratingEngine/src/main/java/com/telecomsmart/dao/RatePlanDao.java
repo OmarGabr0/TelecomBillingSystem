@@ -2,7 +2,6 @@ package com.telecomsmart.dao;
 
 import com.telecomsmart.model.RatePlan;
 import com.telecomsmart.services.DataBaseConnect;
-import java.sql.model.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -12,31 +11,40 @@ import java.util.Map;
 
 public class RatePlanDao {
 
-    public RatePlan getRatePlanByID(Integer id ) { 
-        RatePlan ratePlan = new RatePlan() ; 
-        Strin sql = """ 
-        SELECT * FROM rateplan WHERE ID = ? 
-        """; 
+    public RatePlan getRatePlanByID(Integer id) {
+        RatePlan ratePlan = new RatePlan();
+        String query = """
+                SELECT rateplan_id, name, ror, description, plan_price
+                FROM rateplan
+                WHERE rateplan_id = ?
+                """;
+
         Connection conn = DataBaseConnect.connect();
         if (conn == null) {
             System.out.println("Error connecting to the database");
             return ratePlan;
         }
-        try (PreparedStatement ps = conn.prepareStatement(query);
-             ) {
-                ps.setInt(1,id); 
-               ResultSet rs= ps.executeQuery() ; 
-                while (rs.next()){ 
+
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
                     ratePlan.setRatePlanId(rs.getInt("rateplan_id"));
                     ratePlan.setName(rs.getString("name"));
                     ratePlan.setRor(rs.getFloat("ror"));
                     ratePlan.setDescription(rs.getString("description"));
                     ratePlan.setPlanPrice(rs.getFloat("plan_price"));
-                    
                 }
-
+            }
+        } catch (SQLException e) {
+            System.out.println("Error getting rate plan by id");
+            e.printStackTrace();
+        } finally {
+            DataBaseConnect.disconnect(conn);
         }
-    } 
+
+        return ratePlan;
+    }
 
     public Map<Integer, RatePlan> getRatePlans() {
         Map<Integer, RatePlan> ratePlans = new HashMap<>();

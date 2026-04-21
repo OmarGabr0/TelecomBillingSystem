@@ -3,7 +3,7 @@ package com.telecomsmart.model;
 import java.math.BigDecimal;
 
 public class ZonePrice { 
-    private String dialPrefix ; 
+    private String dialPrefix ; // can be deleted 
     private Integer zoneId ; 
     private BigDecimal pricePerVolume; 
     private BigDecimal freeUnitDeduction ; 

@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS rateplan (
 
 CREATE TABLE IF NOT EXISTS tariff_zone (
 zone_id SERIAL PRIMARY KEY,
-dial_prefix VARCHAR(10) NOT NULL,
+dial_prefix VARCHAR(10) NOT NULL, --- 3 chars = 010 ,011,012
 zone_name VARCHAR(255) NOT NULL,
 description TEXT,
 distenation_name VARCHAR(255) NOT NULL
