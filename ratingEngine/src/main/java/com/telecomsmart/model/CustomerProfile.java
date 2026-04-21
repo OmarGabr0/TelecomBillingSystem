@@ -15,25 +15,34 @@ public class CustomerProfile {
     //     credit_limit INT NOT NULL,
     //     ror_usage DECIMAL(10, 2) NOT NULL,
     //     rateplan_id INT NOT NULL REFERENCES rateplan (rateplan_id) ON DELETE CASCADE,
-    //     free_units_remaining BIGINT NOT NULL
+    //     free_data_units BIGINT NOT NULL,
+    //     free_voice_units BIGINT NOT NULL,
+    //     free_sms_units BIGINT NOT NULL
     // );
+    // //columns in database: 
+
+
 
     private String msisdn;
     private Integer creditLimit;
     private BigDecimal rorUsage;
     private Integer ratePlanId;
-    private long freeUnitsRemaining;
+    private long freeDataUnits;
+    private long freeVoiceUnits;
+    private long freeSmsUnits;
 
     public CustomerProfile() {
     }
 
     public CustomerProfile(String msisdn, Integer creditLimit, BigDecimal rorUsage,
-            Integer ratePlanId, long freeUnitsRemaining) {
+            Integer ratePlanId, long freeDataUnits, long freeVoiceUnits, long freeSmsUnits) {
         this.msisdn = msisdn;
         this.creditLimit = creditLimit;
         this.rorUsage = rorUsage;
         this.ratePlanId = ratePlanId;
-        this.freeUnitsRemaining = freeUnitsRemaining;
+        this.freeDataUnits = freeDataUnits;
+        this.freeVoiceUnits = freeVoiceUnits;
+        this.freeSmsUnits = freeSmsUnits;
     }
 
     public String getMsisdn() {
@@ -68,12 +77,32 @@ public class CustomerProfile {
         this.ratePlanId = ratePlanId;
     }
 
-    public long getFreeUnitsRemaining() {
-        return freeUnitsRemaining;
+    public long getFreeDataUnits() {
+        return freeDataUnits;
     }
 
-    public void setFreeUnitsRemaining(long freeUnitsRemaining) {
-        this.freeUnitsRemaining = freeUnitsRemaining;
+    public void setFreeDataUnits(long freeDataUnits) {
+        this.freeDataUnits = freeDataUnits;
+    }
+
+    public long getFreeVoiceUnits() {
+        return freeVoiceUnits;
+    }
+
+    public void setFreeVoiceUnits(long freeVoiceUnits) {
+        this.freeVoiceUnits = freeVoiceUnits;
+    }
+
+    public long getFreeSmsUnits() {
+        return freeSmsUnits;
+    }
+
+    public void setFreeSmsUnits(long freeSmsUnits) {
+        this.freeSmsUnits = freeSmsUnits;
+    }
+
+    public long getFreeUnitsRemaining() {
+        return freeDataUnits + freeVoiceUnits + freeSmsUnits;
     }
 /*
     @Override
@@ -100,7 +129,10 @@ public class CustomerProfile {
                 + ", creditLimit=" + creditLimit
                 + ", rorUsage=" + rorUsage
                 + ", ratePlanId=" + ratePlanId
-                + ", freeUnitsRemaining=" + freeUnitsRemaining
+                + ", freeDataUnits=" + freeDataUnits
+                + ", freeVoiceUnits=" + freeVoiceUnits
+                + ", freeSmsUnits=" + freeSmsUnits
+                + ", freeUnitsRemaining=" + getFreeUnitsRemaining()
                 + '}';
     }
 }

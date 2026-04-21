@@ -151,3 +151,13 @@ rateplan_id INT NOT NULL REFERENCES rateplan (rateplan_id) ON DELETE CASCADE,
 free_units_remaining BIGINT NOT NULL
 );
 
+----- adding a link between the rateplan and tarrif zone for better rating and billing
+CREATE TABLE IF NOT EXISTS rateplan_service_zone (
+    id SERIAL PRIMARY KEY,
+    rateplan_id INT NOT NULL REFERENCES rateplan(rateplan_id) ON DELETE CASCADE,
+    service_id INT NOT NULL REFERENCES service_package(service_id) ON DELETE CASCADE,
+    zone_id INT NOT NULL REFERENCES tariff_zone(zone_id) ON DELETE CASCADE,
+
+    price_per_volume DECIMAL(10,2) NOT NULL,
+    free_unit_deduction BIGINT DEFAULT 0
+);
