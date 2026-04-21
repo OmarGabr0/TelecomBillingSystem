@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS rateplan (
 
 CREATE TABLE IF NOT EXISTS tariff_zone (
 zone_id SERIAL PRIMARY KEY,
-dial_prefix VARCHAR(10) NOT NULL,
+dial_prefix VARCHAR(10) NOT NULL, --- 3 chars = 010 ,011,012
 zone_name VARCHAR(255) NOT NULL,
 description TEXT,
 distenation_name VARCHAR(255) NOT NULL
@@ -142,8 +142,22 @@ processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ------ Table for Rating Engine tracking the customer profiles ---- 
 CREATE TABLE IF NOT EXISTS customer_profile (
     msisdn VARCHAR(15) NOT NULL REFERENCES contract (msisdn) ON DELETE CASCADE,
+    --contract_name VARCHAR(255) NOT NULL,
     credit_limit INT NOT NULL,
-    balance DECIMAL(10, 2) NOT NULL,
+    ror_usage DECIMAL(10, 2) NOT NULL,
+    --deleted credit limit , not used 
+--info: rateplan_id
 rateplan_id INT NOT NULL REFERENCES rateplan (rateplan_id) ON DELETE CASCADE,
 free_units_remaining BIGINT NOT NULL
+);
+
+----- adding a link between the rateplan and tarrif zone for better rating and billing
+CREATE TABLE IF NOT EXISTS rateplan_service_zone (
+    id SERIAL PRIMARY KEY,
+    rateplan_id INT NOT NULL REFERENCES rateplan(rateplan_id) ON DELETE CASCADE,
+    service_id INT NOT NULL REFERENCES service_package(service_id) ON DELETE CASCADE,
+    zone_id INT NOT NULL REFERENCES tariff_zone(zone_id) ON DELETE CASCADE,
+
+    price_per_volume DECIMAL(10,2) NOT NULL,
+    free_unit_deduction BIGINT DEFAULT 0
 );

@@ -17,7 +17,7 @@ public class Contract {
     private BigDecimal balance;
 
     private Integer customerId;
-    private Integer rateplanId;
+    private Integer ratePlanId;
 
     private LocalDateTime createdAt;
 
@@ -44,8 +44,8 @@ public class Contract {
         return customerId;
     }
 
-    public Integer getRateplanId() {
-        return rateplanId;
+    public Integer getRatePlanId() {
+        return ratePlanId;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -80,8 +80,8 @@ public class Contract {
         this.customerId = customerId;
     }
 
-    public void setRateplanId(Integer rateplanId) {
-        this.rateplanId = rateplanId;
+    public void setRatePlanId(Integer ratePlanId) {
+        this.ratePlanId = ratePlanId;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {
