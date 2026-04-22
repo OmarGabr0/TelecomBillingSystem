@@ -15,7 +15,7 @@ import com.telecomsmart.dao.*;
                  //(msisdn,object of customer profile)
             Map<String, CustomerProfile> Customers =  CustomerProfileDao.getCustomerProfiles();
             // assume  i have the cdr from cdr filter 
-            List<CdrRecord> cdrs = CdrHandling.getFilteredCdrs() ; 
+            List<CdrRecord> cdrs = CdrHandling.getCdrs() ; 
             // looping in the cdrs 
             for(CdrRecord cdr : cdrs){
                 String cdrMsisdn= cdr.getMsisdn();
