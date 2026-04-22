@@ -17,7 +17,9 @@ public class ZonePriceDao {
      * Zone prices for one rate plan and service (key = {@code zone_id}).
      * Joins {@code tariff_zone} for {@code dial_prefix}.
      */
-    // retrive zone price for each service id  from DataBase
+
+    // IMPACT: retrive zone price for each service id  from DataBase
+    //.....
     //input  service_id and rateplan Id 
     // MAP = (ID for service , object of zonePrice )
     // object have the pricing info for the specified zone_id and rateplan entered 

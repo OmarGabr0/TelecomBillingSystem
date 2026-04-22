@@ -8,14 +8,6 @@ public class ZonePrice {
     private BigDecimal pricePerVolume; 
     private BigDecimal freeUnitDeduction ; 
 
-    // public TariffZone(Integer zoneId, String dialPrefix, String zoneName,
-    //     String description, String destinationName) {
-    //     this.zoneId = zoneId;
-    //     this.dialPrefix = dialPrefix;
-    //     this.zoneName = zoneName;
-    //     this.description = description;
-    //     this.destinationName = destinationName;
-    //     }
 
     public String getDialPrefix() {
         return dialPrefix;
