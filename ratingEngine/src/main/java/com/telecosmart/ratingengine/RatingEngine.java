@@ -17,7 +17,7 @@ import com.telecomsmart.dao.*;
            //
            // Input for Omar: 
             // assume  i have the cdr from cdr filter 
-            List<CdrRecord> cdrs = CdrHandling.getFilteredCdrs() ; 
+            List<CdrRecord> cdrs = CdrHandling.getCdrs() ; 
             // looping in the cdrs 
             for(CdrRecord cdr : cdrs){
                 String cdrMsisdn= cdr.getMsisdn();

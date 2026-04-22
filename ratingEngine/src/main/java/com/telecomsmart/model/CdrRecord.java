@@ -11,7 +11,6 @@ public class CdrRecord {
 
     private int cdrId;
     private String msisdn;
-    private String dialA;
     private String dialB;
     private int serviceId;
     private long durationVolume;
@@ -22,12 +21,11 @@ public class CdrRecord {
 
     }
 
-    public CdrRecord(int cdrId, String msisdn, String dialA, String dialB,
+    public CdrRecord(int cdrId, String msisdn, String dialB,
             int serviceId, long durationVolume,
             BigDecimal externalFeesAmount, LocalDateTime cdrTimestamp) {
         this.cdrId = cdrId;
         this.msisdn = msisdn;
-        this.dialA = dialA;
         this.dialB = dialB;
         this.serviceId = serviceId;
         this.durationVolume = durationVolume;
@@ -49,14 +47,6 @@ public class CdrRecord {
 
     public void setMsisdn(String msisdn) {
         this.msisdn = msisdn;
-    }
-
-    public String getDialA() {
-        return dialA;
-    }
-
-    public void setDialA(String dialA) {
-        this.dialA = dialA;
     }
 
     public String getDialB() {
@@ -105,7 +95,6 @@ public class CdrRecord {
         return "CDR{"
                 + "cdrId=" + cdrId
                 + ", msisdn='" + msisdn + '\''
-                + ", dialA='" + dialA + '\''
                 + ", dialB='" + dialB + '\''
                 + ", serviceId=" + serviceId
                 + ", durationVolume=" + durationVolume
