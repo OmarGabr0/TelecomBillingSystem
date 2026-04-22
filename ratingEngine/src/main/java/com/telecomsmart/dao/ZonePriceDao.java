@@ -20,10 +20,10 @@ public class ZonePriceDao {
 
     // IMPACT: retrive zone price for each service id  from DataBase
     //.....
-    //input  service_id and rateplan Id 
+    //input  service_id and rateplan Id
     // MAP = (ID for service , object of zonePrice )
     // object have the pricing info for the specified zone_id and rateplan entered 
-     public Map<Integer, ZonePrice> getZonePrices(int ratePlanId, int servicePackageID) {
+    public Map<Integer, ZonePrice> getZonePrices(int ratePlanId, int serviceId) {
         Map<Integer, ZonePrice> zonePrices = new HashMap<>();
 
         String query = """
@@ -41,7 +41,7 @@ public class ZonePriceDao {
 
         try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setInt(1, ratePlanId);
-            ps.setInt(2, servicePackageID);
+            ps.setInt(2, serviceId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     ZonePrice zonePrice = new ZonePrice();

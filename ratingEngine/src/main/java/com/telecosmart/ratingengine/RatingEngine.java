@@ -14,6 +14,8 @@ import com.telecomsmart.dao.*;
             // Caching the customer profiles 
                  //(msisdn,object of customer profile)
             Map<String, CustomerProfile> Customers =  CustomerProfileDao.getCustomerProfiles();
+           //
+           // Input for Omar: 
             // assume  i have the cdr from cdr filter 
             List<CdrRecord> cdrs = CdrHandling.getFilteredCdrs() ; 
             // looping in the cdrs 
@@ -25,6 +27,8 @@ import com.telecomsmart.dao.*;
                 if(customer != null ){
                     //zone resolving based on service and rateplan 
                     ZonePrice pricedZone = ZoneResolver.resolveZonePrice(customer.ratePlanId,cdr.serviceId);
+                   
+                    //RLH
                     switch(cdr.serviceId){
                         case 1: // Voice call 
                             if(customer.freeVoiceUnits > 0) // if customer have free units
@@ -50,6 +54,7 @@ import com.telecomsmart.dao.*;
                             System.out.println("RatingEngine-ZoneResolving: Unknown Service");
                     }
 
+                    //credit limit 
                     
 
                 } else { 

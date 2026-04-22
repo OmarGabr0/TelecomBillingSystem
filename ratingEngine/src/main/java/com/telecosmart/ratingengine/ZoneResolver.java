@@ -27,8 +27,8 @@ public class ZoneResolver {
     /**
      * Resolves the zone price entry for a CDR, based on dialB prefix.
      */
-    public ZonePrice resolveZonePrice(Integer ratePlanId, Integer servicePackageId, CdrRecord cdr) {
-        if (ratePlanId == null || servicePackageId == null || cdr == null || cdr.getDialB() == null) {
+    public ZonePrice resolveZonePrice(Integer ratePlanId, Integer serviceId, CdrRecord cdr) {
+        if (ratePlanId == null || serviceId == null || cdr == null || cdr.getDialB() == null) {
             return null;
         }
 
@@ -38,7 +38,7 @@ public class ZoneResolver {
             return null;
         }
 
-        Map<Integer, ZonePrice> zonePricesMap = zonePriceDao.getZonePrices(ratePlanId, servicePackageId);
+        Map<Integer, ZonePrice> zonePricesMap = zonePriceDao.getZonePrices(ratePlanId, serviceId);
         return zonePricesMap.get(currentZoneId);
     }
 
@@ -46,16 +46,16 @@ public class ZoneResolver {
     //////////// Function to decide the credit or the free unit deduction for a use
     /**
         I assume you got the cdr for wich user and have the customerProfile for it
-        also you know which rateplan and service package id for that user
-        project Fisrt Stage: only one rateplan,servicepackageId for each user
+        also you know which rateplan and service id for that user
+        project Fisrt Stage: only one service id for each user
     */
     /**
      * Returns charge amount using price_per_volume * usage volume.
      */
 
-      /*
-    public BigDecimal calculateCharge(Integer ratePlanId, Integer servicePackageId, CdrRecord cdr, CustomerProfile customer) {
-        ZonePrice zonePrice = resolveZonePrice(ratePlanId, servicePackageId, cdr);
+      
+    public BigDecimal calculateCharge(Integer ratePlanId, Integer serviceId, CdrRecord cdr, CustomerProfile customer) {
+        ZonePrice zonePrice = resolveZonePrice(ratePlanId, serviceId, cdr);
         if (zonePrice == null || zonePrice.getPricePerVolume() == null || cdr == null) {
             return BigDecimal.ZERO;
         }
@@ -79,7 +79,7 @@ public class ZoneResolver {
         }
 
         TariffZone zone = zoneMapping.get(matchedPrefix);
-        return zone == null ? null : zone.getZoneId();
+        return zone == null ? null : zone.getZone  Id();
     }
-      */
+      
 }
