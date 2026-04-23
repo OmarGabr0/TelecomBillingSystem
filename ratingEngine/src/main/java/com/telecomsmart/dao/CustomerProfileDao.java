@@ -20,6 +20,7 @@ import java.util.Map;
 // free_sms_units  BIGINT
 
 public class CustomerProfileDao {
+    
     public Map<String, CustomerProfile> getCustomerProfiles() {
         Map<String, CustomerProfile> customerProfiles = new HashMap<>();
         String query = """
@@ -76,6 +77,39 @@ public class CustomerProfileDao {
             return true;    
         } catch (SQLException e) {  
             System.out.println("Error creating customer profile");
+            e.printStackTrace();
+            return false;
+        } finally {
+            DataBaseConnect.disconnect(conn);
+        }
+    }
+
+    // Add this method to update the customer profile after rating
+    public boolean updateCustomerProfile(CustomerProfile customerProfile) {
+        Connection conn = DataBaseConnect.connect();
+        if (conn == null) {
+            return false;
+        }
+        
+        String query = """
+                UPDATE customer_profile 
+                SET ror_usage = ?, data_units = ?, voice_units = ?, sms_units = ?, free_units = ?
+                WHERE msisdn = ?
+                """;
+                
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setBigDecimal(1, customerProfile.getRorUsage());
+            ps.setLong(2, customerProfile.getDataUnits());
+            ps.setLong(3, customerProfile.getVoiceUnits());
+            ps.setLong(4, customerProfile.getSmsUnits());
+            ps.setLong(5, customerProfile.getFreeUnits());
+            ps.setString(6, customerProfile.getMsisdn());
+            
+            ps.executeUpdate();
+            return true;
+            
+        } catch (SQLException e) {
+            System.out.println("Error updating customer profile for MSISDN: " + customerProfile.getMsisdn());
             e.printStackTrace();
             return false;
         } finally {
