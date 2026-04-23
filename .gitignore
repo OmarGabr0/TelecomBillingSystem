@@ -27,3 +27,5 @@ Thumbs.db
 
 # credentials database file
 /ratingEngine/src/main/java/com/telecomsmart/services/DatabaseManager.java
+
+.codebuddy/
