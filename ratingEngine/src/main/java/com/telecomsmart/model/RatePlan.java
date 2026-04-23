@@ -11,9 +11,13 @@ public class RatePlan {
 
     private int ratePlanId;
     private String name;
-    private Float ror;
+
+    ////// ROR moved to servicepackage paricing rate 
+    // private Float ror; 
+
     private String description;
     private Float planPrice;
+    private Long freeUnits; 
     private Map<Integer, ServicePackage> serviceMap;
 
     public RatePlan() {
@@ -30,14 +34,6 @@ public class RatePlan {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Float getRor() {
-        return ror;
-    }
-
-    public void setRor(Float ror) {
-        this.ror = ror;
     }
 
     public void setDescription(String description) {
@@ -59,6 +55,15 @@ public class RatePlan {
     public void setPlanPrice(Float planPrice) {
         this.planPrice = planPrice;
     }
+    //
+    public Long getFreeUnits() {
+        return freeUnits;
+    }
+
+    public void setFreeUnits(Long freeUnits) {
+        this.freeUnits = freeUnits;
+    }
+    //
 
     // the linking between the service packages it have 
     public Map<Integer, ServicePackage> getServiceMap() {
@@ -81,7 +86,6 @@ public class RatePlan {
         return "RatePlan{"
                 + "ratePlanId=" + ratePlanId
                 + ", name='" + name + '\''
-                + ", ror=" + ror
                 + ", description='" + description + '\''
                 + ", planPrice=" + planPrice
                 + ", serviceMap=" + serviceMap

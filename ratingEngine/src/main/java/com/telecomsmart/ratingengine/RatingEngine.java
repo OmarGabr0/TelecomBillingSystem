@@ -1,0 +1,143 @@
+//RatingEngine.java: The orchestrator. It loops through CDRs, calls the Resolver and Processor, and creates a RatedCdr result.
+package com.telecomsmart.ratingengine;
+
+import com.telecomsmart.model.*;
+import com.telecomsmart.services.*;
+import com.telecomsmart.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+import com.telecomsmart.dao.*;
+
+/**
+ *
+ * @author omar
+ */
+public class RatingEngine {
+    private long bytesToMB(long bytes) {
+        return (bytes + (1024 * 1024 - 1)) / (1024 * 1024);
+    }
+
+    private long secondsToMinutes(long seconds) {
+        return (seconds + 59) / 60;
+    }
+
+    public static void main(String[] args) {
+        RatingEngine ratingEngine = new RatingEngine();
+
+        while (true) {
+            // Caching the customer profiles
+            // (msisdn,object of customer profile)
+            ServicePackageDao servicePackageDao = new ServicePackageDao();
+            ZoneResolver zoneResolver = new ZoneResolver();
+            CustomerProfileDao customerProfileDao = new CustomerProfileDao();
+
+            // get all customers profiles in memory
+            Map<String, CustomerProfile> Customers = customerProfileDao.getCustomerProfiles();
+            //
+            // Input for Omar:
+            // assume i have the cdr from cdr filter
+            List<CdrRecord> cdrs = CdrHandling.getCdrs();
+
+            // looping in the cdrs
+            for (CdrRecord cdr : cdrs) {
+                String cdrMsisdn = cdr.getMsisdn();
+                // git the customer for that CDR
+                CustomerProfile customer = Customers.get(cdrMsisdn);
+
+                if (customer != null) {
+                    // 1- git service package
+                    Integer servicePackageId = servicePackageDao.getServicePackageId(customer.getRatePlanId(),
+                            cdr.getServiceId());
+                    if (servicePackageId == null) {
+                        System.out.println("No service package found for msisdn: " + cdrMsisdn);
+                        continue; // skip this CDR
+                    }
+                    // 2- git zone price
+                    // zone resolving based on service and rateplan
+                    ZonePrice pricedZone = zoneResolver.resolveZonePrice(customer.getRatePlanId(), servicePackageId,cdr);
+                    if (pricedZone == null) {
+                        System.out.println("No pricing found for CDR: " + cdr.getCdrId());
+                        continue;
+                    }
+
+                    // RLH
+                    switch (cdr.getServiceId()) {
+
+                        case 1: // VOICE
+
+                            long minutes = ratingEngine.secondsToMinutes(cdr.getDurationVolume());
+
+                            if (customer.getFreeUnits() > 0) {
+
+                                long remainingUnits = customer.getFreeUnits() - minutes; // 1 minuts = 1 unit 
+
+                                if (remainingUnits >= 0) {
+                                    customer.setFreeUnits(remainingUnits);
+                                } else {
+                                    long chargeableMinutes = Math.abs(remainingUnits);
+                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableMinutes));
+                                    customer.setFreeUnits(0L);
+                                    customer.setRorUsage(customer.getRorUsage().add(charge));
+                                }
+                            } else {
+                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(minutes));
+                                customer.setRorUsage(customer.getRorUsage().add(charge));
+                            }
+
+                            break;
+
+                        case 2: // SMS
+                            if (customer.getSmsUnits() > 0) {
+                                customer.setSmsUnits(customer.getSmsUnits() - pricedZone.getUnitDeduction());
+                            } else {
+                                customer.setRorUsage(customer.getRorUsage().add(pricedZone.getPricePerVolume())); // 1 sms =1 unit
+
+                            }
+                            break;
+
+                        case 3: // DATA
+
+                            long usageMB = ratingEngine.bytesToMB(cdr.getDurationVolume());
+
+                            if (customer.getDataUnits() > 0) {
+
+                                long remainingUnits = customer.getDataUnits() - usageMB;
+
+                                if (remainingUnits >= 0) {
+                                    customer.setDataUnits(remainingUnits);
+                                } else {
+                                    // partial consumption
+                                    long chargeableMB = Math.abs(remainingUnits);
+                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableMB));
+                                    customer.setDataUnits(0L);
+                                    customer.setRorUsage(customer.getRorUsage().add(charge));
+                                }
+
+                            } else {
+                                BigDecimal charge = pricedZone.getPricePerVolume()
+                                        .multiply(BigDecimal.valueOf(usageMB));
+
+                                customer.setRorUsage(customer.getRorUsage().add(charge));
+                            }
+                            break;
+
+                        default:
+                            System.out.println("Unknown service");
+                    }
+
+                    // credit limit
+
+                } else {
+                    System.out.println("No match for: " + cdr.getMsisdn());
+                }
+
+            }
+
+        }
+
+    }
+
+}

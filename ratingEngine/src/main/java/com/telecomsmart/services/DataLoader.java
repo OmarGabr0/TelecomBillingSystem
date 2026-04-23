@@ -1,7 +1,8 @@
 //This is the class you call in main.
 //It uses the DatabaseManager to run SELECT queries and converts the rows into the POJOs .
 package com.telecomsmart.services;
- import com.telecomsmart.model.Contract;
+import com.telecomsmart.model.Contract;
+import java.sql.SQLException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -30,6 +31,7 @@ public class DataLoader {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    
+    return contractMap;
+    }
     
 }

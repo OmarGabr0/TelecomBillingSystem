@@ -14,7 +14,7 @@ public class RatePlanDao {
     public RatePlan getRatePlanByID(Integer id) {
         RatePlan ratePlan = new RatePlan();
         String query = """
-                SELECT rateplan_id, name, ror, description, plan_price
+                SELECT rateplan_id, name, description, free_units, plan_price
                 FROM rateplan
                 WHERE rateplan_id = ?
                 """;
@@ -31,8 +31,8 @@ public class RatePlanDao {
                 while (rs.next()) {
                     ratePlan.setRatePlanId(rs.getInt("rateplan_id"));
                     ratePlan.setName(rs.getString("name"));
-                    ratePlan.setRor(rs.getFloat("ror"));
                     ratePlan.setDescription(rs.getString("description"));
+                    ratePlan.setFreeUnits(rs.getLong("free_units"));
                     ratePlan.setPlanPrice(rs.getFloat("plan_price"));
                 }
             }
@@ -45,12 +45,12 @@ public class RatePlanDao {
 
         return ratePlan;
     }
-
+    // retrive all rate plans in the database (rate plan id , rate plan object)
     public Map<Integer, RatePlan> getRatePlans() {
         Map<Integer, RatePlan> ratePlans = new HashMap<>();
 
         String query = """
-            SELECT rateplan_id, name, ror, description, plan_price
+            SELECT rateplan_id, name, description, free_units, plan_price
             FROM rateplan
             """;
 
@@ -66,8 +66,8 @@ public class RatePlanDao {
                 RatePlan ratePlan = new RatePlan();
                 ratePlan.setRatePlanId(rs.getInt("rateplan_id"));
                 ratePlan.setName(rs.getString("name"));
-                ratePlan.setRor(rs.getFloat("ror"));
                 ratePlan.setDescription(rs.getString("description"));
+                ratePlan.setFreeUnits(rs.getLong("free_units"));
                 ratePlan.setPlanPrice(rs.getFloat("plan_price"));
                 ratePlans.put(ratePlan.getRatePlanId(), ratePlan);
             }
