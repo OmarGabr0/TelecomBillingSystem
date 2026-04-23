@@ -30,7 +30,7 @@ public class CustomerProfile {
     private long dataUnits;
     private long voiceUnits;
     private long smsUnits;
-     private long freeUnits;
+    private long freeUnits;
 
     public CustomerProfile() {
     }
