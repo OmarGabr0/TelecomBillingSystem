@@ -41,6 +41,16 @@ public class RatingEngine {
             // assume i have the cdr from cdr filter
             List<CdrRecord> cdrs = CdrHandling.getCdrs();
 
+            if (cdrs.isEmpty()) {
+
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } 
+                continue;
+            }
+
             // looping in the cdrs
             for (CdrRecord cdr : cdrs) {
                 String cdrMsisdn = cdr.getMsisdn();
