@@ -77,3 +77,50 @@ INSERT INTO service_package (service_id,service_type,description,rating_price,fr
 INSERT INTO service_rateplan (service_id,rateplan_id) VALUES(9,3);
 
 ---COMMIT;
+
+------------------------------
+
+---------voice
+INSERT INTO rateplan_service_zone 
+(rateplan_id, service_id, zone_id, price_per_volume, free_unit_deduction)
+VALUES
+(1, 1, 0, 0.10, 1), (1, 1, 1, 0.30, 1), (1, 1, 2, 0.30, 1), (1, 1, 3, 0.30, 1), (1, 1, 4, 0.30, 1);
+
+--rateplan 1 
+INSERT INTO rateplan_service_zone 
+(rateplan_id, service_id, zone_id, price_per_volume, unit_deduction)
+VALUES
+(1, 1, 0, 0.10, 1), -- local (same operator)
+(1, 1, 1, 0.30, 1), -- Orange
+(1, 1, 2, 0.30, 1), -- Etisalat
+(1, 1, 3, 0.30, 1), -- Vodafone
+(1, 1, 4, 0.30, 1); -- WE
+--rateplan 2
+INSERT INTO rateplan_service_zone 
+(rateplan_id, service_id, zone_id, price_per_volume, unit_deduction)
+VALUES
+(2, 4, 0, 0.08, 1),
+(2, 4, 1, 0.25, 1),
+(2, 4, 2, 0.25, 1),
+(2, 4, 3, 0.25, 1),
+(2, 4, 4, 0.25, 1);
+
+--------------sms 
+-- rateplan 1
+INSERT INTO rateplan_service_zone 
+(rateplan_id, service_id, zone_id, price_per_volume, unit_deduction)
+VALUES
+(1, 2, 0, 0.05, 1), -- local
+(1, 2, 1, 0.10, 1),
+(1, 2, 2, 0.10, 1),
+(1, 2, 3, 0.10, 1),
+(1, 2, 4, 0.10, 1);
+--- rateplan 2 
+INSERT INTO rateplan_service_zone 
+(rateplan_id, service_id, zone_id, price_per_volume, unit_deduction)
+VALUES
+(2, 5, 0, 0.04, 1),
+(2, 5, 1, 0.08, 1),
+(2, 5, 2, 0.08, 1),
+(2, 5, 3, 0.08, 1),
+(2, 5, 4, 0.08, 1);

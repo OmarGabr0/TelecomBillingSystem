@@ -6,6 +6,13 @@ package com.telecomsmart.model;
 // zone_name VARCHAR(255) NOT NULL
 // description TEXT
 // distenation_name VARCHAR(255) NOT NULL
+
+
+/* 
+
+a class uned in the process of retriveing the zone id from the prefix dialB in the 
+
+*/ 
 public class TariffZone {
 
     private Integer zoneId;

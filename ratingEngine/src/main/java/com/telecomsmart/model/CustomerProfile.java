@@ -27,22 +27,24 @@ public class CustomerProfile {
     private Integer creditLimit;
     private BigDecimal rorUsage;
     private Integer ratePlanId;
-    private long freeDataUnits;
-    private long freeVoiceUnits;
-    private long freeSmsUnits;
+    private long dataUnits;
+    private long voiceUnits;
+    private long smsUnits;
+     private long freeUnits;
 
     public CustomerProfile() {
     }
 
     public CustomerProfile(String msisdn, Integer creditLimit, BigDecimal rorUsage,
-            Integer ratePlanId, long freeDataUnits, long freeVoiceUnits, long freeSmsUnits) {
+            Integer ratePlanId, long freedataUnits, long freeVoiceUnits, long freeSmsUnits) {
         this.msisdn = msisdn;
         this.creditLimit = creditLimit;
         this.rorUsage = rorUsage;
         this.ratePlanId = ratePlanId;
-        this.freeDataUnits = freeDataUnits;
-        this.freeVoiceUnits = freeVoiceUnits;
-        this.freeSmsUnits = freeSmsUnits;
+        this.freeUnits = freeUnits;
+        this.dataUnits = dataUnits;
+        this.voiceUnits = voiceUnits;
+        this.smsUnits = smsUnits;
     }
 
     public String getMsisdn() {
@@ -76,33 +78,37 @@ public class CustomerProfile {
     public void setRatePlanId(Integer ratePlanId) {
         this.ratePlanId = ratePlanId;
     }
-
-    public long getFreeDataUnits() {
-        return freeDataUnits;
+    ////
+    public long getFreeUnits() {
+        return freeUnits;
     }
 
-    public void setFreeDataUnits(long freeDataUnits) {
-        this.freeDataUnits = freeDataUnits;
+    public void setFreeUnits(long freeUnits) {
+        this.freeUnits = freeUnits;
+    }
+    /////
+    public long getDataUnits() {
+        return dataUnits;
     }
 
-    public long getFreeVoiceUnits() {
-        return freeVoiceUnits;
+    public void setDataUnits(long dataUnits) {
+        this.dataUnits = dataUnits;
     }
 
-    public void setFreeVoiceUnits(long freeVoiceUnits) {
-        this.freeVoiceUnits = freeVoiceUnits;
+    public long getVoiceUnits() {
+        return voiceUnits;
     }
 
-    public long getFreeSmsUnits() {
-        return freeSmsUnits;
+    public void setVoiceUnits(long voiceUnits) {
+        this.voiceUnits = voiceUnits;
     }
 
-    public void setFreeSmsUnits(long freeSmsUnits) {
-        this.freeSmsUnits = freeSmsUnits;
+    public long getSmsUnits() {
+        return smsUnits;
     }
 
-    public long getFreeUnitsRemaining() {
-        return freeDataUnits + freeVoiceUnits + freeSmsUnits;
+    public void setSmsUnits(long smsUnits) {
+        this.smsUnits = smsUnits;
     }
 /*
     @Override
@@ -129,10 +135,11 @@ public class CustomerProfile {
                 + ", creditLimit=" + creditLimit
                 + ", rorUsage=" + rorUsage
                 + ", ratePlanId=" + ratePlanId
-                + ", freeDataUnits=" + freeDataUnits
-                + ", freeVoiceUnits=" + freeVoiceUnits
-                + ", freeSmsUnits=" + freeSmsUnits
-                + ", freeUnitsRemaining=" + getFreeUnitsRemaining()
+                + ", freeUnits=" + freeUnits
+                + ", dataUnits=" + dataUnits
+                + ", voiceUnits=" + voiceUnits
+                + ", smsUnits=" + smsUnits
+                + ", UnitsRemaining=" + getFreeUnits()
                 + '}';
     }
 }

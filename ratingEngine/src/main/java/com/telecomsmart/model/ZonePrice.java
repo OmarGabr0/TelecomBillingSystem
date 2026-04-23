@@ -3,11 +3,19 @@ package com.telecomsmart.model;
 import java.math.BigDecimal;
 
 public class ZonePrice { 
-    private String dialPrefix ; // can be deleted 
-    private Integer zoneId ; 
-    private BigDecimal pricePerVolume; 
-    private BigDecimal freeUnitDeduction ; 
+    private String dialPrefix;
+    private Integer zoneId;
+    private BigDecimal pricePerVolume;
+    private Long unitDeduction;
 
+    //  DATA pricing factory 
+    public static ZonePrice forData() {
+        ZonePrice zp = new ZonePrice();
+        zp.setZoneId(null);
+        zp.setPricePerVolume(new BigDecimal("0.30")); // per MB
+        zp.setUnitDeduction(1L);
+        return zp;
+    }
 
     public String getDialPrefix() {
         return dialPrefix;
@@ -33,12 +41,12 @@ public class ZonePrice {
         this.pricePerVolume = pricePerVolume;
     }
 
-    public BigDecimal getFreeUnitDeduction() {
-        return freeUnitDeduction;
+    public Long getUnitDeduction() {
+        return unitDeduction;
     }
 
-    public void setFreeUnitDeduction(BigDecimal freeUnitDeduction) {
-        this.freeUnitDeduction = freeUnitDeduction;
+    public void setUnitDeduction(Long unitDeduction) {
+        this.unitDeduction = unitDeduction;
     }
 
 }

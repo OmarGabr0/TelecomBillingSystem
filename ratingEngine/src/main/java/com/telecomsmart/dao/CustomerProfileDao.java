@@ -23,7 +23,7 @@ public class CustomerProfileDao {
     public Map<String, CustomerProfile> getCustomerProfiles() {
         Map<String, CustomerProfile> customerProfiles = new HashMap<>();
         String query = """
-                SELECT msisdn, credit_limit, ror_usage, rateplan_id, free_data_units, free_voice_units, free_sms_units
+                SELECT msisdn, credit_limit, ror_usage, rateplan_id, data_units, voice_units, sms_units,free_units
                 FROM customer_profile
                 """;
         Connection conn = DataBaseConnect.connect();
@@ -39,9 +39,10 @@ public class CustomerProfileDao {
                 customerProfile.setCreditLimit(rs.getInt("credit_limit"));
                 customerProfile.setRorUsage(rs.getBigDecimal("ror_usage"));
                 customerProfile.setRatePlanId(rs.getInt("rateplan_id"));
-                customerProfile.setFreeDataUnits(rs.getLong("free_data_units"));
-                customerProfile.setFreeVoiceUnits(rs.getLong("free_voice_units"));
-                customerProfile.setFreeSmsUnits(rs.getLong("free_sms_units"));
+                customerProfile.setDataUnits(rs.getLong("data_units"));
+                customerProfile.setVoiceUnits(rs.getLong("voice_units"));
+                customerProfile.setSmsUnits(rs.getLong("sms_units"));
+                customerProfile.setFreeUnits(rs.getLong("free_units"));
                 customerProfiles.put(customerProfile.getMsisdn(), customerProfile);
             }
         } catch (SQLException e) {
@@ -59,17 +60,18 @@ public class CustomerProfileDao {
             return false;
         }
         String query = """
-                INSERT INTO customer_profile (msisdn, credit_limit, ror_usage, rateplan_id, free_data_units, free_voice_units, free_sms_units)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO customer_profile (msisdn, credit_limit, ror_usage, rateplan_id, data_units, voice_units, sms_units, free_units)
+                VALUES (?, ?, ?, ?, ?, ?, ?,?)
                 """;
         try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, customerProfile.getMsisdn());
             ps.setInt(2, customerProfile.getCreditLimit());
             ps.setBigDecimal(3, customerProfile.getRorUsage());
             ps.setInt(4, customerProfile.getRatePlanId());
-            ps.setLong(5, customerProfile.getFreeDataUnits());
-            ps.setLong(6, customerProfile.getFreeVoiceUnits());
-            ps.setLong(7, customerProfile.getFreeSmsUnits());
+            ps.setLong(5, customerProfile.getDataUnits());
+            ps.setLong(6, customerProfile.getVoiceUnits());
+            ps.setLong(7, customerProfile.getSmsUnits());
+            ps.setLong(8, customerProfile.getFreeUnits());
             ps.executeUpdate();
             return true;    
         } catch (SQLException e) {  

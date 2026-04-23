@@ -16,7 +16,7 @@ public class ServicePackage {
     private Integer serviceType; // 1=voice, 2=sms, 3=data
     private String description;
     private BigDecimal ratingPrice;
-    private Long freeUnits;
+    private Long units;
     private Integer zoneId;
 
     public Integer getServiceId() {
@@ -51,12 +51,12 @@ public class ServicePackage {
         this.ratingPrice = ratingPrice;
     }
 
-    public Long getFreeUnits() {
-        return freeUnits;
+    public Long getUnits() {
+        return units;
     }
 
-    public void setFreeUnits(Long freeUnits) {
-        this.freeUnits = freeUnits;
+    public void setUnits(Long units) {
+        this.units = units;
     }
 
     public Integer getZoneId() {
