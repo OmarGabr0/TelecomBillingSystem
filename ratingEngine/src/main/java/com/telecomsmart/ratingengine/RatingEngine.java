@@ -59,8 +59,7 @@ public class RatingEngine {
 
                 if (customer != null) {
                     // 1- git service package
-                    Integer servicePackageId = servicePackageDao.getServicePackageId(customer.getRatePlanId(),
-                            cdr.getServiceId());
+                    Integer servicePackageId = servicePackageDao.getServicePackageId(customer.getRatePlanId(),cdr.getServiceId());
                     if (servicePackageId == null) {
                         System.out.println("No service package found for msisdn: " + cdrMsisdn);
                         continue; // skip this CDR
@@ -78,7 +77,8 @@ public class RatingEngine {
 
                         case 1: // VOICE
 
-                            long minutes = ratingEngine.secondsToMinutes(cdr.getDurationVolume());
+                            long seconds = cdr.getDurationVolume();
+                            long minutes = (long) Math.ceil(seconds / 60.0); // rounding up to the nearest minute
 
                             if (customer.getFreeUnits() > 0) {
 
@@ -100,12 +100,16 @@ public class RatingEngine {
                             break;
 
                         case 2: // SMS
-                            if (customer.getSmsUnits() > 0) {
-                                customer.setSmsUnits(customer.getSmsUnits() - pricedZone.getUnitDeduction());
-                            } else {
-                                customer.setRorUsage(customer.getRorUsage().add(pricedZone.getPricePerVolume())); // 1 sms =1 unit
+                                long smsCount = cdr.getDurationVolume();
 
-                            }
+                                long deduction = pricedZone.getUnitDeduction() * smsCount;
+
+                                if (customer.getSmsUnits() > 0) {
+                                    customer.setSmsUnits(customer.getSmsUnits() - deduction);
+                                } else {
+                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(smsCount));
+                                    customer.setRorUsage(customer.getRorUsage().add(charge));
+                                }
                             break;
 
                         case 3: // DATA
@@ -125,11 +129,8 @@ public class RatingEngine {
                                     customer.setDataUnits(0L);
                                     customer.setRorUsage(customer.getRorUsage().add(charge));
                                 }
-
                             } else {
-                                BigDecimal charge = pricedZone.getPricePerVolume()
-                                        .multiply(BigDecimal.valueOf(usageMB));
-
+                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(usageMB));
                                 customer.setRorUsage(customer.getRorUsage().add(charge));
                             }
                             break;
