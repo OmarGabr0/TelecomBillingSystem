@@ -3,7 +3,6 @@ package com.telecomsmart.ratingengine;
 
 import com.telecomsmart.model.*;
 import com.telecomsmart.services.*;
-import com.telecomsmart.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -138,6 +137,21 @@ public class RatingEngine {
                         default:
                             System.out.println("Unknown service");
                     }
+
+                    // 1. Add external fees from the CDR to the customer's ROR
+                    if (cdr.getExternalFeesAmount() != null && cdr.getExternalFeesAmount().compareTo(BigDecimal.ZERO) > 0) {
+                        customer.setRorUsage(customer.getRorUsage().add(cdr.getExternalFeesAmount()));
+                    }
+
+                    // 2. Update the Database!
+                    boolean isUpdated = customerProfileDao.updateCustomerProfile(customer);
+                    if (isUpdated) {
+                        System.out.println("Successfully updated DB for MSISDN: " + cdrMsisdn + " | New ROR: " + customer.getRorUsage());
+                    } else {
+                        System.out.println("Failed to update DB for MSISDN: " + cdrMsisdn);
+                    }
+                    
+                    // --- NEW CODE ENDS HERE ---
 
                     // credit limit
 
