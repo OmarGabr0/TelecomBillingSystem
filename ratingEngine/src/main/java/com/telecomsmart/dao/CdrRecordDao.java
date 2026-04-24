@@ -20,7 +20,7 @@ public class CdrRecordDao {
                     SELECT cdr_id
                     FROM cdr
                     ORDER BY cdr_id
-                    LIMIT 100
+                    LIMIT 200
                 )
                 RETURNING *;
                 """;
