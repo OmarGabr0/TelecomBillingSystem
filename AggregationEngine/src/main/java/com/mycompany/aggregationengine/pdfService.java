@@ -4,14 +4,73 @@
  */
 package com.mycompany.aggregationengine;
 
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 /**
  *
  * @author mohamed
  */
 public class pdfService {
   
-    public String generate(InvoiceData Data){
-        System.out.println("PDF Created ......... ");
-        return "/opt/invoice.pdf";
+    public String generate(InvoiceData data) {
+
+        try {
+            String html = loadTemplate();
+
+           html = html.replace("{{customerId}}", String.valueOf(data.customer.customerId))
+           .replace("{{email}}", data.customer.email)
+           .replace("{{address}}", data.customer.address)
+           .replace("{{contractId}}", String.valueOf(data.contractId))
+           .replace("{{ratePlan}}", data.ratePlanName)
+           .replace("{{start}}", data.cycle.start.toString())
+           .replace("{{end}}", data.cycle.end.toString())
+           .replace("{{monthly}}", String.valueOf(data.monthly))
+           .replace("{{recurring}}", String.valueOf(data.recurring))
+           .replace("{{oneTime}}", String.valueOf(data.oneTime))
+           .replace("{{ror}}", String.valueOf(data.ror))
+           .replace("{{subtotal}}", String.valueOf(data.subtotal))
+           .replace("{{tax}}", String.valueOf(data.tax))
+           .replace("{{total}}", String.valueOf(data.total));
+
+            String path = buildPath(data);
+
+            createFolder(data.contractId);
+
+            try (OutputStream os = new FileOutputStream(path)) {
+
+                PdfRendererBuilder builder = new PdfRendererBuilder();
+                builder.withHtmlContent(html, null);
+                builder.toStream(os);
+                builder.run();
+            }
+
+            return path;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
+
+    private String loadTemplate() throws IOException {
+        InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("templates/invoice.html");
+
+        return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+    }
+
+    private String buildPath(InvoiceData data) {
+        return "invoices/" + data.contractId + "/" +
+                data.cycle.start + "_" + data.cycle.end + ".pdf";
+    }
+
+    private void createFolder(int contractId) {
+        File dir = new File("invoices/" + contractId);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+    }
+
 }

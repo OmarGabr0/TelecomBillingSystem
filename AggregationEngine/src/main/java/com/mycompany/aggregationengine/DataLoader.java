@@ -205,6 +205,34 @@ public class DataLoader {
 
         return null;
     }
+    // =============================
+    // 9.Get Rate Plan Information
+    // =============================
+    public String getRatePlanName(int contractId) {
+
+    String sql = """
+        SELECT rp.name
+        FROM contracts c
+        JOIN rate_plans rp ON c.rate_plan_id = rp.id
+        WHERE c.id = ?
+    """;
+
+    try (PreparedStatement ps = con.prepareStatement(sql)) {
+
+        ps.setInt(1, contractId);
+
+        ResultSet rs = ps.executeQuery();
+
+        if (rs.next()) {
+            return rs.getString("name");
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+
+    return "N/A";
+}
 
     
 }

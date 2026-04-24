@@ -14,6 +14,9 @@ import java.sql.Connection;
 public class AggregationEngine {
 
     public static void main(String[] args) {
+        InvoiceService invoice = new InvoiceService();
+        invoice.generateAllInvoices();
+        
         
     }
 }

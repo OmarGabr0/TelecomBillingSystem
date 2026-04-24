@@ -12,7 +12,10 @@ import java.util.*;
 public class BillingCycle {
     public Date start;
     public Date end;
-
+    
+    public BillingCycle(){
+        
+    }
     public BillingCycle(Date start, Date end) {
         this.start = start;
         this.end = end;

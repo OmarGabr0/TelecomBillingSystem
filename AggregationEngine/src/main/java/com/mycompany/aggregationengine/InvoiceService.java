@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class InvoiceService {
 
-    private final DataLoader repo;
+    public final DataLoader repo;
     private final Connection con;
     private final pdfService pdfService;
 
@@ -49,7 +49,8 @@ public class InvoiceService {
                     System.out.println("No Customer Found → skip");
                     continue;
                 }
-
+                
+                String planName =repo.getRatePlanName(contractId);
                 double monthlyCost = repo.getMonthlyCost(contractId);
                 double ror = repo.getProfileROR(contractId);
                 double oneTimeFees = repo.getOneTimeFees(contractId);
@@ -63,6 +64,7 @@ public class InvoiceService {
                 double total = subtotal - discount + tax;
                 // Set Invoice Data (Build Object)
                 InvoiceData data = new InvoiceData(contractId,
+                        planName,
                         cycle,
                         customer,
                         monthlyCost,
