@@ -8,9 +8,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List; 
 import java.util.Map;
 
-// //columns in database: 
+// Database columns: 
 // msisdn VARCHAR(15)
 // credit_limit INTEGER
 // ror_usage NUMERIC(10, 2)
@@ -21,15 +22,16 @@ import java.util.Map;
 
 public class CustomerProfileDao {
     
+    // Method to retrieve all customer profiles (Used for in-memory caching)
     public Map<String, CustomerProfile> getCustomerProfiles() {
         Map<String, CustomerProfile> customerProfiles = new HashMap<>();
         String query = """
-                SELECT msisdn, credit_limit, ror_usage, rateplan_id, data_units, voice_units, sms_units,free_units
+                SELECT msisdn, credit_limit, ror_usage, rateplan_id, data_units, voice_units, sms_units, free_units
                 FROM customer_profile
                 """;
         Connection conn = DataBaseConnect.connect();
         if (conn == null) {
-            System.out.println("Error connecting to the database");
+            System.out.println("Error connecting to the database.");
             return customerProfiles;
         }
         try (PreparedStatement ps = conn.prepareStatement(query);
@@ -47,7 +49,7 @@ public class CustomerProfileDao {
                 customerProfiles.put(customerProfile.getMsisdn(), customerProfile);
             }
         } catch (SQLException e) {
-            System.out.println("Error getting customer profiles");
+            System.out.println("Error retrieving customer profiles.");
             e.printStackTrace();
         } finally {
             DataBaseConnect.disconnect(conn);
@@ -55,14 +57,15 @@ public class CustomerProfileDao {
         return customerProfiles;
     }
 
-    public boolean createCustomerProfile (CustomerProfile customerProfile) {
+    // Method to create a new customer profile
+    public boolean createCustomerProfile(CustomerProfile customerProfile) {
         Connection conn = DataBaseConnect.connect();
         if (conn == null) {
             return false;
         }
         String query = """
                 INSERT INTO customer_profile (msisdn, credit_limit, ror_usage, rateplan_id, data_units, voice_units, sms_units, free_units)
-                VALUES (?, ?, ?, ?, ?, ?, ?,?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """;
         try (PreparedStatement ps = conn.prepareStatement(query)) {
             ps.setString(1, customerProfile.getMsisdn());
@@ -76,7 +79,7 @@ public class CustomerProfileDao {
             ps.executeUpdate();
             return true;    
         } catch (SQLException e) {  
-            System.out.println("Error creating customer profile");
+            System.out.println("Error creating customer profile.");
             e.printStackTrace();
             return false;
         } finally {
@@ -84,7 +87,7 @@ public class CustomerProfileDao {
         }
     }
 
-    // Add this method to update the customer profile after rating
+    // Keep this method in case you need to update a single record later
     public boolean updateCustomerProfile(CustomerProfile customerProfile) {
         Connection conn = DataBaseConnect.connect();
         if (conn == null) {
@@ -109,10 +112,74 @@ public class CustomerProfileDao {
             return true;
             
         } catch (SQLException e) {
-            System.out.println("Error updating customer profile for MSISDN: " + customerProfile.getMsisdn());
+            System.out.println("Error updating profile for MSISDN: " + customerProfile.getMsisdn());
             e.printStackTrace();
             return false;
         } finally {
+            DataBaseConnect.disconnect(conn);
+        }
+    }
+
+    // 🔹 NEW METHOD: Batch Update to significantly boost performance
+    public boolean updateCustomerProfilesBatch(List<CustomerProfile> customerProfiles) {
+        // Check if the list is empty to avoid unnecessary DB calls
+        if (customerProfiles == null || customerProfiles.isEmpty()) {
+            return true;
+        }
+
+        Connection conn = DataBaseConnect.connect();
+        if (conn == null) {
+            System.out.println("Error connecting to the database during batch update.");
+            return false;
+        }
+
+        String query = """
+                UPDATE customer_profile 
+                SET ror_usage = ?, data_units = ?, voice_units = ?, sms_units = ?, free_units = ?
+                WHERE msisdn = ?
+                """;
+
+        try {
+            // 1. Disable auto-commit to ensure the batch is sent as a single transaction
+            conn.setAutoCommit(false);
+
+            try (PreparedStatement ps = conn.prepareStatement(query)) {
+                for (CustomerProfile customer : customerProfiles) {
+                    ps.setBigDecimal(1, customer.getRorUsage());
+                    ps.setLong(2, customer.getDataUnits());
+                    ps.setLong(3, customer.getVoiceUnits());
+                    ps.setLong(4, customer.getSmsUnits());
+                    ps.setLong(5, customer.getFreeUnits());
+                    ps.setString(6, customer.getMsisdn());
+
+                    // 2. Add this update command to the batch
+                    ps.addBatch();
+                }
+
+                // 3. Execute all commands in the batch at once
+                ps.executeBatch();
+                
+                // 4. Commit the changes to the database
+                conn.commit();
+                return true;
+
+            } catch (SQLException e) {
+                // In case of an error, rollback to maintain data integrity
+                conn.rollback();
+                System.out.println("Error during batch update. Transaction rolled back.");
+                e.printStackTrace();
+                return false;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            // Restore default connection settings and close
+            try {
+                conn.setAutoCommit(true);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
             DataBaseConnect.disconnect(conn);
         }
     }
