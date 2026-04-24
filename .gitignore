@@ -29,3 +29,6 @@ Thumbs.db
 /ratingEngine/src/main/java/com/telecomsmart/services/DatabaseManager.java
 
 .codebuddy/
+
+# Parser credentials database file
+/parser_module/src/main/java/com/mycompany/telecombillingparser/DatabaseConfig.java

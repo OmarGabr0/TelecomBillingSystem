@@ -5,13 +5,13 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ServicePackageDao {
 
-    // input: ratePlanId and serviceType (1=voice, 2=sms, 3=data from the CDR)
-    // output: the service_id (servicePackageId) that matches
+    // Keep the old method just in case it's used elsewhere
     public Integer getServicePackageId(int ratePlanId, int serviceType) {
-
         String query = """
                 SELECT sp.service_id
                 FROM service_package sp
@@ -41,6 +41,35 @@ public class ServicePackageDao {
             DataBaseConnect.disconnect(conn);
         }
 
-        return null; // no match found
+        return null;
+    }
+
+    // 🔹 NEW METHOD: Fetch all service packages into Memory (Cache)
+    public Map<String, Integer> getAllServicePackages() {
+        Map<String, Integer> cache = new HashMap<>();
+        String query = """
+                SELECT sr.rateplan_id, sp.service_type, sp.service_id
+                FROM service_package sp
+                JOIN service_rateplan sr ON sp.service_id = sr.service_id
+                """;
+
+        Connection conn = DataBaseConnect.connect();
+        if (conn == null) {
+            return cache;
+        }
+
+        try (PreparedStatement ps = conn.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                // Create a unique key: "ratePlanId_serviceType"
+                String key = rs.getInt("rateplan_id") + "_" + rs.getInt("service_type");
+                cache.put(key, rs.getInt("service_id"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DataBaseConnect.disconnect(conn);
+        }
+        return cache;
     }
 }

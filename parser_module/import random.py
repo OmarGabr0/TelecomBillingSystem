@@ -1,7 +1,7 @@
 import random
 import datetime
 import os
-
+import time
 
 my_numbers = [
     "00201619283745", "00201650394821", "00201684759203", "00201628374619", "00201693847562",
@@ -18,12 +18,15 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 target_dir = os.path.join(script_dir, "generated_cdrs")
 
 os.makedirs(target_dir, exist_ok=True)
-base_time = datetime.datetime.now()
+print("CDR Generator Started... Press CTRL+C to stop.")
 
-for i in range(5): 
-    file_time = base_time + datetime.timedelta(hours=i)
-    filename = os.path.join(target_dir, f"CDR{file_time.strftime('%Y%m%d%H%M%S')}.csv")
+
+
+while True:
     
+    file_time = datetime.datetime.now()
+    filename = os.path.join(target_dir, f"CDR{file_time.strftime('%Y%m%d%H%M%S')}.csv")
+
     with open(filename, 'w') as f:
         for _ in range(100):
             dial_a = random.choice(my_numbers)
@@ -60,5 +63,6 @@ for i in range(5):
                 volume = random.randint(1024, 104857600) # From 1KB to 100MB
                 ext_fees = random.choice([0, 10, 15])
                 f.write(f"{dial_a},{dial_b},{service_id},{volume},{start_time_str},{ext_fees}\n")
-
-print("done")
+    
+    print(f"Generated new batch of 100 CDRs: {filename}")
+    time.sleep(5)

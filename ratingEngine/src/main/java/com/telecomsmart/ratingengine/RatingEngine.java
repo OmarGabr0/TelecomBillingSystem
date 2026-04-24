@@ -1,4 +1,4 @@
-//RatingEngine.java: The orchestrator. It loops through CDRs, calls the Resolver and Processor, and creates a RatedCdr result.
+// RatingEngine.java: The orchestrator. It loops through CDRs, calls the Resolver and Processor, and creates a RatedCdr result.
 package com.telecomsmart.ratingengine;
 
 import com.telecomsmart.model.*;
@@ -7,6 +7,7 @@ import com.telecomsmart.services.*;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 import com.telecomsmart.dao.*;
 
@@ -26,22 +27,24 @@ public class RatingEngine {
     public static void main(String[] args) {
         RatingEngine ratingEngine = new RatingEngine();
 
-        while (true) {
-            // Caching the customer profiles
-            // (msisdn,object of customer profile)
-            ServicePackageDao servicePackageDao = new ServicePackageDao();
-            ZoneResolver zoneResolver = new ZoneResolver();
-            CustomerProfileDao customerProfileDao = new CustomerProfileDao();
+        // 🔹 1. LOAD STATIC DATA OUTSIDE THE LOOP (Run only once to prevent N+1 queries)
+        ServicePackageDao servicePackageDao = new ServicePackageDao();
+        Map<String, Integer> servicePackageCache = servicePackageDao.getAllServicePackages();
+        
+        // The ZoneResolver constructor now caches zones and prices in memory automatically
+        ZoneResolver zoneResolver = new ZoneResolver(); 
+        
+        CustomerProfileDao customerProfileDao = new CustomerProfileDao();
 
-            // get all customers profiles in memory
+        while (true) {
+            // 🔹 2. LOAD DYNAMIC DATA INSIDE THE LOOP (Because balances change constantly)
+            // Get all customers profiles in memory
             Map<String, CustomerProfile> Customers = customerProfileDao.getCustomerProfiles();
-            //
-            // Input for Omar:
-            // assume i have the cdr from cdr filter
+            
+            // Assume we have the cdr from cdr filter
             List<CdrRecord> cdrs = CdrHandling.getCdrs();
 
             if (cdrs.isEmpty()) {
-
                 try {
                     Thread.sleep(5000);
                 } catch (InterruptedException e) {
@@ -50,38 +53,41 @@ public class RatingEngine {
                 continue;
             }
 
-            // looping in the cdrs
+            // Create a list to collect customers that need to be updated in the DB
+            List<CustomerProfile> customersToUpdate = new ArrayList<>();
+            System.out.println(">>> [Rating Engine] Fetched " + cdrs.size() + " CDRs from DB to process...");
+
+            // Looping in the cdrs
             for (CdrRecord cdr : cdrs) {
                 String cdrMsisdn = cdr.getMsisdn();
-                // git the customer for that CDR
+                // Get the customer for that CDR
                 CustomerProfile customer = Customers.get(cdrMsisdn);
 
                 if (customer != null) {
-                    // 1- git service package
-                    Integer servicePackageId = servicePackageDao.getServicePackageId(customer.getRatePlanId(),cdr.getServiceId());
+                    // 🔹 3. Get service package from Memory Cache instead of hitting the DB
+                    String spKey = customer.getRatePlanId() + "_" + cdr.getServiceId();
+                    Integer servicePackageId = servicePackageCache.get(spKey);
+                    
                     if (servicePackageId == null) {
                         System.out.println("No service package found for msisdn: " + cdrMsisdn);
-                        continue; // skip this CDR
+                        continue; // Skip this CDR
                     }
-                    // 2- git zone price
-                    // zone resolving based on service and rateplan
-                    ZonePrice pricedZone = zoneResolver.resolveZonePrice(customer.getRatePlanId(), servicePackageId,cdr);
+                    
+                    // Get zone price (ZoneResolver now reads from its internal memory cache)
+                    ZonePrice pricedZone = zoneResolver.resolveZonePrice(customer.getRatePlanId(), servicePackageId, cdr);
                     if (pricedZone == null) {
                         System.out.println("No pricing found for CDR: " + cdr.getCdrId());
                         continue;
                     }
 
-                    // RLH
+                    // RLH: Service ID switch case
                     switch (cdr.getServiceId()) {
-
                         case 1: // VOICE
-
                             long seconds = cdr.getDurationVolume();
-                            long minutes = (long) Math.ceil(seconds / 60.0); // rounding up to the nearest minute
+                            long minutes = (long) Math.ceil(seconds / 60.0); // Rounding up to the nearest minute
 
                             if (customer.getFreeUnits() > 0) {
-
-                                long remainingUnits = customer.getFreeUnits() - minutes; // 1 minuts = 1 unit 
+                                long remainingUnits = customer.getFreeUnits() - minutes; // 1 minute = 1 unit 
 
                                 if (remainingUnits >= 0) {
                                     customer.setFreeUnits(remainingUnits);
@@ -95,34 +101,30 @@ public class RatingEngine {
                                 BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(minutes));
                                 customer.setRorUsage(customer.getRorUsage().add(charge));
                             }
-
                             break;
 
                         case 2: // SMS
-                                long smsCount = cdr.getDurationVolume();
+                            long smsCount = cdr.getDurationVolume();
+                            long deduction = pricedZone.getUnitDeduction() * smsCount;
 
-                                long deduction = pricedZone.getUnitDeduction() * smsCount;
-
-                                if (customer.getSmsUnits() > 0) {
-                                    customer.setSmsUnits(customer.getSmsUnits() - deduction);
-                                } else {
-                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(smsCount));
-                                    customer.setRorUsage(customer.getRorUsage().add(charge));
-                                }
+                            if (customer.getSmsUnits() > 0) {
+                                customer.setSmsUnits(customer.getSmsUnits() - deduction);
+                            } else {
+                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(smsCount));
+                                customer.setRorUsage(customer.getRorUsage().add(charge));
+                            }
                             break;
 
                         case 3: // DATA
-
                             long usageMB = ratingEngine.bytesToMB(cdr.getDurationVolume());
 
                             if (customer.getDataUnits() > 0) {
-
                                 long remainingUnits = customer.getDataUnits() - usageMB;
 
                                 if (remainingUnits >= 0) {
                                     customer.setDataUnits(remainingUnits);
                                 } else {
-                                    // partial consumption
+                                    // Partial consumption
                                     long chargeableMB = Math.abs(remainingUnits);
                                     BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableMB));
                                     customer.setDataUnits(0L);
@@ -138,31 +140,34 @@ public class RatingEngine {
                             System.out.println("Unknown service");
                     }
 
-                    // 1. Add external fees from the CDR to the customer's ROR
+                    // Add external fees from the CDR to the customer's ROR
                     if (cdr.getExternalFeesAmount() != null && cdr.getExternalFeesAmount().compareTo(BigDecimal.ZERO) > 0) {
                         customer.setRorUsage(customer.getRorUsage().add(cdr.getExternalFeesAmount()));
                     }
 
-                    // 2. Update the Database!
-                    boolean isUpdated = customerProfileDao.updateCustomerProfile(customer);
-                    if (isUpdated) {
-                        System.out.println("Successfully updated DB for MSISDN: " + cdrMsisdn + " | New ROR: " + customer.getRorUsage());
-                    } else {
-                        System.out.println("Failed to update DB for MSISDN: " + cdrMsisdn);
+                    // Add customer to the batch list instead of updating the DB immediately
+                    // Using contains() ensures we don't add duplicate update queries for the same customer in one batch
+                    if (!customersToUpdate.contains(customer)) {
+                        customersToUpdate.add(customer);
                     }
-                    
-                    // --- NEW CODE ENDS HERE ---
 
-                    // credit limit
+                    // Credit limit logic can go here
 
                 } else {
-                    System.out.println("No match for: " + cdr.getMsisdn());
+                    // System.out.println("No match for: " + cdr.getMsisdn());
                 }
+            }
 
+            // 4. Execute Batch Update after processing all CDRs in the current batch
+            if (!customersToUpdate.isEmpty()) {
+                boolean isBatchUpdated = customerProfileDao.updateCustomerProfilesBatch(customersToUpdate);
+                if (isBatchUpdated) {
+                    System.out.println("✅ Successfully rated and batch-updated " + customersToUpdate.size() + " unique customers!");
+                } else {
+                    System.out.println("❌ Failed to process batch update.");
+                }
             }
 
         }
-
     }
-
 }
