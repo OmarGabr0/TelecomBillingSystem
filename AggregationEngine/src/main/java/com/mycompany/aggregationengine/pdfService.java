@@ -19,12 +19,13 @@ public class pdfService {
             String html = loadTemplate();
 
            html = html.replace("{{customerId}}", String.valueOf(data.customer.customerId))
+           .replace("{{customerName}}", String.valueOf(data.customer.name))
            .replace("{{email}}", data.customer.email)
            .replace("{{address}}", data.customer.address)
-           .replace("{{contractId}}", String.valueOf(data.contractId))
+           .replace("{{contractId}}", String.valueOf(data.msisdn))
            .replace("{{ratePlan}}", data.ratePlanName)
-           .replace("{{start}}", data.cycle.start.toString())
-           .replace("{{end}}", data.cycle.end.toString())
+           .replace("{{start}}", data.billing_start.toString())
+           .replace("{{end}}", data.billing_end.toString())
            .replace("{{monthly}}", String.valueOf(data.monthly))
            .replace("{{recurring}}", String.valueOf(data.recurring))
            .replace("{{oneTime}}", String.valueOf(data.oneTime))
@@ -35,7 +36,7 @@ public class pdfService {
 
             String path = buildPath(data);
 
-            createFolder(data.contractId);
+            createFolder(data.msisdn);
 
             try (OutputStream os = new FileOutputStream(path)) {
 
@@ -62,12 +63,12 @@ public class pdfService {
     }
 
     private String buildPath(InvoiceData data) {
-        return "invoices/" + data.contractId + "/" +
-                data.cycle.start + "_" + data.cycle.end + ".pdf";
+        return "invoices/" + data.msisdn + "/" +
+                data.billing_start + "_" + data.billing_end + ".pdf";
     }
 
-    private void createFolder(int contractId) {
-        File dir = new File("invoices/" + contractId);
+    private void createFolder(String msisdn) {
+        File dir = new File("invoices/" + msisdn);
         if (!dir.exists()) {
             dir.mkdirs();
         }

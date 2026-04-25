@@ -4,18 +4,20 @@
  */
 package com.mycompany.aggregationengine;
 
+import java.util.Date;
+
 /**
  *
  * @author mohamed
  */
 public class InvoiceData {
 
-    public int contractId;
+    public String msisdn;
     
     public String  ratePlanName;
 
-    
-    public BillingCycle cycle;
+    public Date billing_start;
+    public Date billing_end;
     
     public CustomerData customer;
     
@@ -29,14 +31,19 @@ public class InvoiceData {
     public double tax;
     public double total;
 
-   public InvoiceData(int contractId, String ratePlanName, BillingCycle cycle, CustomerData customer, double monthly, double recurring, double oneTime, double ror, double subtotal, double discount, double tax, double total) {
-        this.contractId = contractId;
+   public InvoiceData(String msisdn, String ratePlanName, Date billing_start,Date billing_end, CustomerData customer, double monthly, double recurring, double oneTime, double ror, double subtotal, double discount, double tax, double total) {
+        this.msisdn = msisdn;
         this.ratePlanName = ratePlanName;
-        this.cycle = cycle;
+        
+        this.billing_start= billing_start;
+        this.billing_end=billing_end;
+        
         this.customer = customer;
+        
         this.monthly = monthly;
         this.recurring = recurring;
         this.oneTime = oneTime;
+        
         this.ror = ror;
         this.subtotal = subtotal;
         this.discount = discount;

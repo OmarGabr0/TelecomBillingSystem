@@ -10,13 +10,13 @@ package com.mycompany.aggregationengine;
  */
 public class CustomerData {
     public int customerId;
-    public String nationalId;
+    public String name;
     public String email;
     public String address;
 
-    public CustomerData(int customerId, String nationalId, String email, String address) {
+    public CustomerData(int customerId, String name, String email, String address) {
         this.customerId = customerId;
-        this.nationalId = nationalId;
+        this.name = name;
         this.email = email;
         this.address = address;
     }
@@ -25,8 +25,8 @@ public class CustomerData {
         return customerId;
     }
 
-    public String getNationalId() {
-        return nationalId;
+    public String getName() {
+        return name;
     }
 
     public String getEmail() {
@@ -41,8 +41,8 @@ public class CustomerData {
         this.customerId = customerId;
     }
 
-    public void setNationalId(String nationalId) {
-        this.nationalId = nationalId;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setEmail(String email) {

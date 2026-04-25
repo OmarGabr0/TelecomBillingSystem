@@ -25,14 +25,14 @@ public class DataLoader {
     // ===============================
     // 2.Get All Active Contracts
     // ===============================
-    public List<Integer> getAllActiveContacts() {
-        List<Integer> contracts = new ArrayList<>();
-        String sql = "SELECT id FROM contracts WHERE status = 'ACTIVE' ";
+    public List<String> getAllActiveContacts() {
+        List<String> contracts = new ArrayList<>();
+        String sql = "SELECT msisdn FROM contract ";
 
         try (PreparedStatement ps = con.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                contracts.add(rs.getInt("id"));
+                contracts.add(rs.getString("msisdn"));
             }
 
         } catch (Exception e) {
@@ -42,64 +42,111 @@ public class DataLoader {
     }
 
     // ================================
-    // 3.Get Run On Rate From Profile
+    // 3.Get Profile Data
     // ================================
-    public double getProfileROR(int msisdn) {
-        String sql = "SELECT total_ror FROM profile WHERE contract_id=?";
+    public Profile getProfile(String msisdn) {
+        String sql = "SELECT * FROM customer_profile WHERE msisdn=?";
         double ror = 0;
         try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, msisdn);
+            ps.setString(1, msisdn);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                ror = rs.getDouble("total_ror");
+                return new Profile(msisdn,
+                        rs.getInt("rateplan_id"),
+                        rs.getInt("data_units"),
+                        rs.getInt("voice_units"),
+                        rs.getInt("sms_units"),
+                        rs.getInt("free_units"),
+                        rs.getDate("billing_start"),
+                        rs.getDate("billing_end"),
+                        rs.getDouble("discount"),
+                        rs.getDouble("ror_usage"));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return ror;
+        return null;
     }
 
     // ================================
-    // 4.Get Monthly Cost of Rate Plan
+    // 4.Get Rate Plan
     // ================================
-    public double getMonthlyCost(int msisdn) {
+    public RatePlan getRatePlan(int ratePlanID) {
         String sql = """
-                     SELECT rp.monthly_cost
-                     FROM rate_plans rp 
-                     JOIN contracts c ON rp.id=c.rate_plan_id
-                     WHERE c.id=?
+                     SELECT *
+                     FROM rateplan
+                     WHERE ratePlanID=?
                      """;
-        double cost = 0;
+        
         try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, msisdn);
+            ps.setInt(1, ratePlanID);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                cost = rs.getDouble("monthly_cost");
+                ServicePackages servicePackages = getServicePackages(ratePlanID);
+                
+                return new RatePlan(rs.getInt("rateplan_id"),
+                        rs.getString("name"),
+                        rs.getInt("free_units"),
+                        servicePackages,
+                        rs.getDouble("ror"),
+                        rs.getDouble("plan_price"));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return cost;
+        return null;
     }
-
-    // =============================
-    // 5.Get Recurring Fees
-    // =============================
-    public double getRecurringFees(int msisdn) {
+    // ================================
+    // 5.Get Service Packages
+    // ================================ 
+    public ServicePackages getServicePackages(int ratePlanID) {
         String sql = """
-                SELECT COALESCE(SUM(rfd.amount),0) AS total
-                FROM contract_recurring_fees crf
-                JOIN recurring_fee_definitions rfd
-                ON crf.fee_id = rfd.id
-                WHERE crf.contract_id = ?
-                AND (crf.end_date IS NULL OR crf.end_date >= CURRENT_DATE)
+                     SELECT sp.units , sp.service_type
+                     FROM service_rateplan sp
+                     JOIN service_package srp ON srp.service_id=sp.service_id
+                     WHERE srp.rateplan_id=?
+                     """;
+        
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            int dataUnits=0;
+            int voiceUnits=0;
+            int smsUnits=0;
+            
+            ps.setInt(1, ratePlanID);
+            ResultSet rs = ps.executeQuery();
+            
+            while (rs.next()) {
+                switch (rs.getInt("service_type")) {
+                    case 1 -> voiceUnits=voiceUnits+rs.getInt("units");
+                    case 2 -> dataUnits=dataUnits+rs.getInt("units");
+                    case 3 -> smsUnits=smsUnits+rs.getInt("units");
+                    default -> {
+                    }
+                }
+            }
+            return new ServicePackages(dataUnits,voiceUnits, smsUnits);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    // =============================
+    // 6.Get Recurring Fees
+    // =============================
+    public double getRecurringFees(String msisdn) {
+        String sql = """
+                SELECT COALESCE(SUM(rs.amount),0) AS total
+                FROM contract_recurring cr
+                JOIN recurring_service rs
+                ON cr.recurring_id = rs.recurring_id
+                WHERE cr.msisdn =  ?
                 """;
 
         double total = 0;
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setInt(1, msisdn);
+            ps.setString(1, msisdn);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
@@ -116,21 +163,20 @@ public class DataLoader {
     // =============================
     // 6.Get One-Time Fees
     // =============================
-    public double getOneTimeFees(int msisdn) {
+    public double getOneTimeFees(String msisdn) {
         String sql = """
                 SELECT COALESCE(SUM(otf.amount),0) AS total
-                FROM contract_one_time_fees cotf
-                JOIN one_time_fee_definitions otf
-                ON cotf.fee_id = otf.id
-                WHERE cotf.contract_id = ?
-                AND cotf.billed = false
+                FROM contract_fee cf
+                JOIN onetime_fee otf
+                ON cf.fee_id = otf.fee_id
+                WHERE cf.msisdn = ?
                 """;
 
         double total = 0;
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setInt(1, msisdn);
+            ps.setString(1, msisdn);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
@@ -145,55 +191,26 @@ public class DataLoader {
     }
 
     // =============================
-    // 7.Get Billing Cycle
+    // 7.Get Customer Data
     // =============================
-    public BillingCycle getBillingCycle(int msisdn) {
-
-        String sql = """
-        SELECT billing_start, billing_end
-        FROM profile
-        WHERE contract_id = ?
-    """;
-
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, msisdn);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return new BillingCycle(
-                        rs.getDate("billing_start"),
-                        rs.getDate("billing_end")
-                );
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-    // =============================
-    // 8.Get Customer Data
-    // =============================
-    public CustomerData getCustomerData(int msisdn) {
+    public CustomerData getCustomerData(String msisdn) {
 
         String sql = """
         SELECT cu.*
-        FROM customers cu 
-        JOIN contracts co ON cu.id=co.customer_id           
-        WHERE co.id = ?
+        FROM customer cu 
+        JOIN contract co ON cu.customer_id=co.customer_id           
+        WHERE co.msisdn = ?
         """;
 
         try (PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setInt(1, msisdn);
+            ps.setString(1, msisdn);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
                 return new CustomerData(
-                        rs.getInt("id"),
-                        rs.getString("national_id"),
+                        rs.getInt("customer_id"),
+                        rs.getString("name"),
                         rs.getString("email"),
                         rs.getString("address")
                 );
@@ -205,34 +222,7 @@ public class DataLoader {
 
         return null;
     }
-    // =============================
-    // 9.Get Rate Plan Information
-    // =============================
-    public String getRatePlanName(int contractId) {
 
-    String sql = """
-        SELECT rp.name
-        FROM contracts c
-        JOIN rate_plans rp ON c.rate_plan_id = rp.id
-        WHERE c.id = ?
-    """;
-
-    try (PreparedStatement ps = con.prepareStatement(sql)) {
-
-        ps.setInt(1, contractId);
-
-        ResultSet rs = ps.executeQuery();
-
-        if (rs.next()) {
-            return rs.getString("name");
-        }
-
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-
-    return "N/A";
-}
 
     
 }
