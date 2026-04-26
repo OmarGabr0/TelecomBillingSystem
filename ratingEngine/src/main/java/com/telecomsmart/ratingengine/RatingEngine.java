@@ -82,23 +82,37 @@ public class RatingEngine {
 
                     // RLH: Service ID switch case
                     switch (cdr.getServiceId()) {
+                        // Logic for Case 1: VOICE (Applying 3-Tier Hierarchy)
                         case 1: // VOICE
                             long seconds = cdr.getDurationVolume();
-                            long minutes = (long) Math.ceil(seconds / 60.0); // Rounding up to the nearest minute
+                            long minutes = (long) Math.ceil(seconds / 60.0);
+                            long remainingToCharge = minutes;
 
+                            // STEP 1: Deduct from General Free Units
                             if (customer.getFreeUnits() > 0) {
-                                long remainingUnits = customer.getFreeUnits() - minutes; // 1 minute = 1 unit 
-
-                                if (remainingUnits >= 0) {
-                                    customer.setFreeUnits(remainingUnits);
+                                if (customer.getFreeUnits() >= remainingToCharge) {
+                                    customer.setFreeUnits(customer.getFreeUnits() - remainingToCharge);
+                                    remainingToCharge = 0;
                                 } else {
-                                    long chargeableMinutes = Math.abs(remainingUnits);
-                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableMinutes));
+                                    remainingToCharge -= customer.getFreeUnits();
                                     customer.setFreeUnits(0L);
-                                    customer.setRorUsage(customer.getRorUsage().add(charge));
                                 }
-                            } else {
-                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(minutes));
+                            }
+
+                            // STEP 2: Deduct from Voice Specific Units
+                            if (remainingToCharge > 0 && customer.getVoiceUnits() > 0) {
+                                if (customer.getVoiceUnits() >= remainingToCharge) {
+                                    customer.setVoiceUnits(customer.getVoiceUnits() - remainingToCharge);
+                                    remainingToCharge = 0;
+                                } else {
+                                    remainingToCharge -= customer.getVoiceUnits();
+                                    customer.setVoiceUnits(0L);
+                                }
+                            }
+
+                            // STEP 3: Charge to ROR (Money)
+                            if (remainingToCharge > 0) {
+                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(remainingToCharge));
                                 customer.setRorUsage(customer.getRorUsage().add(charge));
                             }
                             break;
@@ -108,13 +122,25 @@ public class RatingEngine {
                             long deduction = pricedZone.getUnitDeduction() * smsCount;
 
                             if (customer.getSmsUnits() > 0) {
-                                customer.setSmsUnits(customer.getSmsUnits() - deduction);
+                                long remainingSms = customer.getSmsUnits() - deduction;
+
+                                if (remainingSms >= 0) {
+                                    // Sufficient SMS units available
+                                    customer.setSmsUnits(remainingSms);
+                                } else {
+                                    // Partial consumption: SMS units exhausted, charge the remaining messages
+                                    long chargeableSms = Math.abs(remainingSms) / pricedZone.getUnitDeduction();
+                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableSms));
+                                    customer.setSmsUnits(0L);
+                                    customer.setRorUsage(customer.getRorUsage().add(charge));
+                                }
                             } else {
+                                // No SMS units available, charge the full count
                                 BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(smsCount));
                                 customer.setRorUsage(customer.getRorUsage().add(charge));
                             }
                             break;
-
+                          
                         case 3: // DATA
                             long usageMB = ratingEngine.bytesToMB(cdr.getDurationVolume());
 
