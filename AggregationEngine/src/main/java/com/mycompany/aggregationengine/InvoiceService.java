@@ -71,6 +71,7 @@ public class InvoiceService {
 
             if (invoiceExists(profile)) {
                 System.out.println("Invoice already exists → skip");
+                con.rollback();
                 return;
             }
 
@@ -103,7 +104,7 @@ public class InvoiceService {
             // Insert Invoice
             insertInvoice(data, pdfPath);
             // reset 
-            resetProfile(msisdn , plan);
+            resetProfile(profile , plan);
             con.commit();
             System.out.println("Committed ✔ " + msisdn);
             
@@ -165,7 +166,7 @@ public class InvoiceService {
             msisdn,
             billing_start,
             billing_end,
-            subtotal,
+            sub_total,
             discount,
             tax,
             total,
@@ -196,40 +197,45 @@ public class InvoiceService {
     // Calculate Run On Rate
     // =========================
     private double calculateROR(Profile p, RatePlan R) {
-        double ror = 0;
+        double ror = p.ror;
         // Calculate Days
-        LocalDate start = p.billing_start.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
+        LocalDate start = p.billing_start.toLocalDate();
+        LocalDate end = p.billing_end.toLocalDate();
 
-        LocalDate end = p.billing_end.toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDate();
-
-        long days = ChronoUnit.DAYS.between(start, end) + 1;
+        long days = ChronoUnit.DAYS.between(start, end)+1;
         
         // Compare Run On Rate
         if(days >= 30){
-            ror=p.ror;
+            return ror;
         }
         else{
+            
             // Calculate new service packages units according to billcycle
+            
             double ratio = (double)days/30;
-            int newFreeUnits = (int) (ratio * R.free_units);
-            int newVoiceUnits = (int) (ratio * R.servicePackages.voiceUnits);
-            int newDataUnits = (int) (ratio * R.servicePackages.dataUnits);
-            int newSmsUnits = (int) (ratio * R.servicePackages.smsUnits);
-            int totalUnits=newFreeUnits+newVoiceUnits+newDataUnits+newSmsUnits;
+            
+            int freeUnits = (int) (ratio * R.free_units);
+            int voiceUnits = (int) (ratio * R.servicePackages.voiceUnits);
+            int totalVoiceUnits=freeUnits+voiceUnits;
+            int dataUnits = (int) (ratio * R.servicePackages.dataUnits);
+            int smsUnits = (int) (ratio * R.servicePackages.smsUnits);
+            
             
             // Calculate bundles usage
+            
             int freeUnitsUsed = R.free_units - p.free_units;
             int voiceUnitsUsed = R.servicePackages.voiceUnits - p.voice_units;
+            int totalVoiceUnitsUsed = freeUnitsUsed + voiceUnitsUsed;
+            if(totalVoiceUnitsUsed>totalVoiceUnits){
+                ror=ror+(totalVoiceUnitsUsed-totalVoiceUnits)*R.ror_policy;
+            }
             int dataUnitsUsed = R.servicePackages.dataUnits - p.data_units;
+            if(dataUnitsUsed>dataUnits){
+                ror=ror+(dataUnitsUsed-dataUnits)*R.ror_policy;
+            }
             int smsUnitsUsed = R.servicePackages.smsUnits - p.sms_units;
-            int totalUnitsUsed = freeUnitsUsed+voiceUnitsUsed+dataUnitsUsed+smsUnitsUsed;
-            
-            if(totalUnitsUsed-totalUnits>0){
-                ror = p.ror + (totalUnitsUsed-totalUnits)* R.ror_policy;
+            if(smsUnitsUsed>smsUnits){
+                ror=ror+(smsUnitsUsed-smsUnits)*R.ror_policy;
             }
         }
         return ror;
@@ -239,14 +245,24 @@ public class InvoiceService {
     // =========================
     // Reset Profile
     // =========================
-    private void resetProfile(String msisdn , RatePlan plan) {
+    private void resetProfile(Profile profile , RatePlan plan) {
+        
+        LocalDate currentEnd = profile.billing_end.toLocalDate();
 
+        // New Billcycle Start Date
+        LocalDate newStart = currentEnd.plusDays(1);
+
+        // New Billcycle End Date
+        LocalDate newEnd = newStart.plusDays(29);
+        
         String sql = """
                      UPDATE customer_profile SET ror_usage = 0,
                      voice_units=?,
                      data_units=?,
                      sms_units=?,
-                     free_units=?
+                     free_units=?,
+                     billing_start=?,
+                     billing_end=?
                      WHERE msisdn = ?
                      """;
 
@@ -256,7 +272,9 @@ public class InvoiceService {
             ps.setInt(2, plan.servicePackages.dataUnits);
             ps.setInt(3, plan.servicePackages.smsUnits);
             ps.setInt(4, plan.free_units);
-            ps.setString(5, msisdn);
+            ps.setDate(5, java.sql.Date.valueOf(newStart));
+            ps.setDate(6, java.sql.Date.valueOf(newEnd));
+            ps.setString(7, profile.msisdn);
             ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();

@@ -75,7 +75,7 @@ public class DataLoader {
         String sql = """
                      SELECT *
                      FROM rateplan
-                     WHERE ratePlanID=?
+                     WHERE ratePlan_id=?
                      """;
         
         try (PreparedStatement ps = con.prepareStatement(sql)) {
@@ -101,10 +101,10 @@ public class DataLoader {
     // ================================ 
     public ServicePackages getServicePackages(int ratePlanID) {
         String sql = """
-                     SELECT sp.units , sp.service_type
+                     SELECT srp.units , srp.service_type
                      FROM service_rateplan sp
                      JOIN service_package srp ON srp.service_id=sp.service_id
-                     WHERE srp.rateplan_id=?
+                     WHERE sp.rateplan_id=?
                      """;
         
         try (PreparedStatement ps = con.prepareStatement(sql)) {
@@ -118,13 +118,14 @@ public class DataLoader {
             while (rs.next()) {
                 switch (rs.getInt("service_type")) {
                     case 1 -> voiceUnits=voiceUnits+rs.getInt("units");
-                    case 2 -> dataUnits=dataUnits+rs.getInt("units");
-                    case 3 -> smsUnits=smsUnits+rs.getInt("units");
+                    case 2 -> smsUnits=smsUnits+rs.getInt("units");
+                    case 3 -> dataUnits=dataUnits+rs.getInt("units");
+                    
                     default -> {
                     }
                 }
             }
-            return new ServicePackages(dataUnits,voiceUnits, smsUnits);
+            return new ServicePackages(voiceUnits,dataUnits, smsUnits);
         } catch (Exception e) {
             e.printStackTrace();
         }

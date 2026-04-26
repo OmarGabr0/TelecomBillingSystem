@@ -15,7 +15,7 @@ public class AggregationEngine {
 
     public static void main(String[] args) {
         InvoiceService invoice = new InvoiceService();
-        invoice.generateAllInvoices();
+        invoice.generateInvoice("00201610293847");
         
         
     }

@@ -30,6 +30,7 @@ public class pdfService {
            .replace("{{recurring}}", String.valueOf(data.recurring))
            .replace("{{oneTime}}", String.valueOf(data.oneTime))
            .replace("{{ror}}", String.valueOf(data.ror))
+           .replace("{{discount}}", String.valueOf(data.discount))
            .replace("{{subtotal}}", String.valueOf(data.subtotal))
            .replace("{{tax}}", String.valueOf(data.tax))
            .replace("{{total}}", String.valueOf(data.total));

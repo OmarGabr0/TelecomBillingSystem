@@ -4,7 +4,7 @@
  */
 package com.mycompany.aggregationengine;
 
-import java.util.Date;
+import java.sql.Date;
 
 /**
  *
