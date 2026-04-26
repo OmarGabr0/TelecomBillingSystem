@@ -167,9 +167,9 @@ public class RatingEngine {
                     }
 
                     // Add external fees from the CDR to the customer's ROR
-                    if (cdr.getExternalFeesAmount() != null && cdr.getExternalFeesAmount().compareTo(BigDecimal.ZERO) > 0) {
-                        customer.setRorUsage(customer.getRorUsage().add(cdr.getExternalFeesAmount()));
-                    }
+//                    if (cdr.getExternalFeesAmount() != null && cdr.getExternalFeesAmount().compareTo(BigDecimal.ZERO) > 0) {
+//                        customer.setRorUsage(customer.getRorUsage().add(cdr.getExternalFeesAmount()));
+//                    }
 
                     // Add customer to the batch list instead of updating the DB immediately
                     // Using contains() ensures we don't add duplicate update queries for the same customer in one batch
