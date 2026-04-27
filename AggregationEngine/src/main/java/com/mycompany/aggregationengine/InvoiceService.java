@@ -7,7 +7,6 @@ package com.mycompany.aggregationengine;
 import java.sql.*;
 import java.sql.Date;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
