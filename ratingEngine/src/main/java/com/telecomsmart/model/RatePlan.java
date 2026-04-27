@@ -1,9 +1,7 @@
 package com.telecomsmart.model;
 
-//import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
-//import com.telecomsmart.ServicePackage;
+import java.util.Map;
 
 /**
  *
@@ -11,60 +9,63 @@ import java.util.HashMap;
  */
 public class RatePlan {
 
-    private int rateplan_id;
+    private int ratePlanId;
     private String name;
-    private Float ROR;
+
+    ////// ROR moved to servicepackage paricing rate 
+    // private Float ror; 
+
     private String description;
-    private Float plan_price;
+    private Float planPrice;
+    private Long freeUnits; 
     private Map<Integer, ServicePackage> serviceMap;
 
-    public void setRateplan_id(int rateplan_id) {
-        this.rateplan_id = rateplan_id;
+    public RatePlan() {
+        this.serviceMap = new HashMap<>();
+    }
+
+    public int getRatePlanId() {
+        return ratePlanId;
+    }
+
+    public void setRatePlanId(int ratePlanId) {
+        this.ratePlanId = ratePlanId;
     }
 
     public void setName(String name) {
         this.name = name;
     }
 
-    public void setROR(Float ROR) {
-        this.ROR = ROR;
-    }
-
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public void setPlan_price(Float plan_price) {
-        this.plan_price = plan_price;
-    }
-
-    public int getRateplan_id() {
-        return rateplan_id;
     }
 
     public String getName() {
         return name;
     }
 
-    public Float getROR() {
-        return ROR;
-    }
-
     public String getDescription() {
         return description;
     }
 
-    public Float getPlan_price() {
-        return plan_price;
+    public Float getPlanPrice() {
+        return planPrice;
     }
 
-    // the linking between the service packages it have 
-    public RatePlan() {
-        Map<Integer, ServicePackage> serviceMap = new HashMap<Integer, ServicePackage>();
+    public void setPlanPrice(Float planPrice) {
+        this.planPrice = planPrice;
     }
-    // to return the private map 
-    // will use in retrive the service package by id 
-   
+    //
+    public Long getFreeUnits() {
+        return freeUnits;
+    }
+
+    public void setFreeUnits(Long freeUnits) {
+        this.freeUnits = freeUnits;
+    }
+    //
+
+    // the linking between the service packages it have 
     public Map<Integer, ServicePackage> getServiceMap() {
         return serviceMap;
     }
@@ -82,7 +83,13 @@ public class RatePlan {
 
     @Override
     public String toString() {
-        return "RatePlan{" + "rateplan_id=" + rateplan_id + ", name=" + name + ", ROR=" + ROR + ", description=" + description + ", plan_price=" + plan_price + ", serviceMap=" + serviceMap + '}';
+        return "RatePlan{"
+                + "ratePlanId=" + ratePlanId
+                + ", name='" + name + '\''
+                + ", description='" + description + '\''
+                + ", planPrice=" + planPrice
+                + ", serviceMap=" + serviceMap
+                + '}';
     }
 
 }
