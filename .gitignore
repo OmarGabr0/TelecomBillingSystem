@@ -24,6 +24,9 @@ Thumbs.db
 *.tmp
 *.swp
 
+/AggregationEngine/src/main/resources/application.properties
+
+/AggregationEngine/target/*
 
 # credentials database file
 /ratingEngine/src/main/java/com/telecomsmart/services/DatabaseManager.java
