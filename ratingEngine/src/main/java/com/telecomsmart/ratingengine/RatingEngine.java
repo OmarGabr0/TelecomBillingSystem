@@ -27,21 +27,24 @@ public class RatingEngine {
     public static void main(String[] args) {
         RatingEngine ratingEngine = new RatingEngine();
 
-        // 🔹 1. LOAD STATIC DATA OUTSIDE THE LOOP (Run only once to prevent N+1 queries)
+        //1. LOAD STATIC DATA OUTSIDE THE LOOP (Run only once to prevent N+1 queries)
         ServicePackageDao servicePackageDao = new ServicePackageDao();
         Map<String, Integer> servicePackageCache = servicePackageDao.getAllServicePackages();
         
-        // The ZoneResolver constructor now caches zones and prices in memory automatically
+        // caches zones and prices in memory automatically
         ZoneResolver zoneResolver = new ZoneResolver(); 
         
         CustomerProfileDao customerProfileDao = new CustomerProfileDao();
 
-        while (true) {
-            // 🔹 2. LOAD DYNAMIC DATA INSIDE THE LOOP (Because balances change constantly)
+        RatedCdrDao ratedCdrDao = new RatedCdrDao();
+
+        while (true) { 
+            //2. LOAD DYNAMIC DATA INSIDE THE LOOP (Because balances change constantly)
             // Get all customers profiles in memory
             Map<String, CustomerProfile> Customers = customerProfileDao.getCustomerProfiles();
+             List<RatedCdr> ratedCdrBatch = new ArrayList<>();
             
-            // Assume we have the cdr from cdr filter
+            // Pulling 50 CDRs at a time from the DataBase
             List<CdrRecord> cdrs = CdrHandling.getCdrs();
 
             if (cdrs.isEmpty()) {
@@ -62,9 +65,12 @@ public class RatingEngine {
                 String cdrMsisdn = cdr.getMsisdn();
                 // Get the customer for that CDR
                 CustomerProfile customer = Customers.get(cdrMsisdn);
+                if (customer.getRorUsage() == null) {
+                    customer.setRorUsage(BigDecimal.ZERO);
+                }
 
                 if (customer != null) {
-                    // 🔹 3. Get service package from Memory Cache instead of hitting the DB
+                    //  3. Get service package from Memory Cache instead of hitting the DB
                     String spKey = customer.getRatePlanId() + "_" + cdr.getServiceId();
                     Integer servicePackageId = servicePackageCache.get(spKey);
                     
@@ -79,6 +85,13 @@ public class RatingEngine {
                         System.out.println("No pricing found for CDR: " + cdr.getCdrId());
                         continue;
                     }
+                    // Process the CDR and update the customer's profile in memory
+                    RatedCdr rated = new RatedCdr();
+                    rated.setCdrId(cdr.getCdrId());
+                    rated.setMsisdn(cdr.getMsisdn());
+                    rated.setServiceId(cdr.getServiceId());
+                    rated.setProcessedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                    rated.setCdrStatus("RATED");
 
                     // RLH: Service ID switch case
                     switch (cdr.getServiceId()) {
@@ -115,6 +128,9 @@ public class RatingEngine {
                                 BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(remainingToCharge));
                                 customer.setRorUsage(customer.getRorUsage().add(charge));
                             }
+                            rated.setRoundedDuration(minutes);
+                            rated.setUnitsUsage(minutes);
+                            rated.setRorUsage(customer.getRorUsage());
                             break;
 
                         case 2: // SMS
@@ -139,6 +155,9 @@ public class RatingEngine {
                                 BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(smsCount));
                                 customer.setRorUsage(customer.getRorUsage().add(charge));
                             }
+                            rated.setRoundedDuration(smsCount);
+                            rated.setUnitsUsage(smsCount);
+                            rated.setRorUsage(customer.getRorUsage());
                             break;
                           
                         case 3: // DATA
@@ -160,16 +179,22 @@ public class RatingEngine {
                                 BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(usageMB));
                                 customer.setRorUsage(customer.getRorUsage().add(charge));
                             }
+                            rated.setRoundedDuration(usageMB);
+                            rated.setUnitsUsage(usageMB);
+                            rated.setRorUsage(customer.getRorUsage());
                             break;
+
 
                         default:
                             System.out.println("Unknown service");
                     }
+                    ratedCdrBatch.add(rated);
+
 
                     // Add external fees from the CDR to the customer's ROR
-//                    if (cdr.getExternalFeesAmount() != null && cdr.getExternalFeesAmount().compareTo(BigDecimal.ZERO) > 0) {
-//                        customer.setRorUsage(customer.getRorUsage().add(cdr.getExternalFeesAmount()));
-//                    }
+                    //            if (cdr.getExternalFeesAmount() != null && cdr.getExternalFeesAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    //                customer.setRorUsage(customer.getRorUsage().add(cdr.getExternalFeesAmount()));
+                    //             }
 
                     // Add customer to the batch list instead of updating the DB immediately
                     // Using contains() ensures we don't add duplicate update queries for the same customer in one batch
@@ -179,9 +204,11 @@ public class RatingEngine {
 
                     // Credit limit logic can go here
 
-                } else {
-                    // System.out.println("No match for: " + cdr.getMsisdn());
-                }
+                    } else {
+                        // System.out.println("No match for: " + cdr.getMsisdn());
+                    }
+                    
+                    
             }
 
             // 4. Execute Batch Update after processing all CDRs in the current batch
@@ -193,6 +220,14 @@ public class RatingEngine {
                     System.out.println("❌ Failed to process batch update.");
                 }
             }
+
+                // 5. Insert all rated CDRs in batch
+                
+                if (!ratedCdrBatch.isEmpty()) {
+                    ratedCdrDao.insertBatch(ratedCdrBatch);
+                    ratedCdrBatch.clear();
+                }
+            
 
         }
     }
