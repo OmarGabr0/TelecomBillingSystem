@@ -135,7 +135,10 @@ rated_cdr_id SERIAL PRIMARY KEY,
 cdr_id INT NOT NULL REFERENCES cdr(cdr_id) ON DELETE CASCADE,
 cdr_status VARCHAR(5) NOT NULL, --- rated,processing,corrupted
 processed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-
+--ALTER TABLE rated_cdr ADD COLUMN rounded_duration BIGINT ;
+--ALTER TABLE rated_cdr ADD COLUMN ror_usage DECIMAL(10,2) ;
+--ALTER TABLE rated_cdr ADD COLUMN units_usage BIGINT ;
+--ALTER TABLE rated_cdr ADD COLUMN service_id  INTEGER ;
 );
 
 

@@ -31,6 +31,7 @@ public class DataLoader {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
     return contractMap;
     }
     
