@@ -94,9 +94,12 @@ public class RatingEngine {
                     rated.setCdrStatus("RATED");
 
                     // RLH: Service ID switch case
+// Variable to store the cost of THIS specific CDR only
+                    BigDecimal currentCdrCharge = BigDecimal.ZERO; 
+
                     switch (cdr.getServiceId()) {
-                        // Logic for Case 1: VOICE (Applying 3-Tier Hierarchy)
-                        case 1: // VOICE
+                        case 1 -> {
+                            // VOICE
                             long seconds = cdr.getDurationVolume();
                             long minutes = (long) Math.ceil(seconds / 60.0);
                             long remainingToCharge = minutes;
@@ -125,15 +128,17 @@ public class RatingEngine {
 
                             // STEP 3: Charge to ROR (Money)
                             if (remainingToCharge > 0) {
-                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(remainingToCharge));
-                                customer.setRorUsage(customer.getRorUsage().add(charge));
+                                currentCdrCharge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(remainingToCharge));
+                                customer.setRorUsage(customer.getRorUsage().add(currentCdrCharge));
                             }
+                            
                             rated.setRoundedDuration(minutes);
                             rated.setUnitsUsage(minutes);
-                            rated.setRorUsage(customer.getRorUsage());
-                            break;
+                            rated.setRorUsage(currentCdrCharge); // FIXED: Assigning only this CDR's cost
+                        }
 
-                        case 2: // SMS
+                        case 2 -> {
+                            // SMS
                             long smsCount = cdr.getDurationVolume();
                             long deduction = pricedZone.getUnitDeduction() * smsCount;
 
@@ -141,26 +146,27 @@ public class RatingEngine {
                                 long remainingSms = customer.getSmsUnits() - deduction;
 
                                 if (remainingSms >= 0) {
-                                    // Sufficient SMS units available
                                     customer.setSmsUnits(remainingSms);
                                 } else {
-                                    // Partial consumption: SMS units exhausted, charge the remaining messages
+                                    // Partial consumption
                                     long chargeableSms = Math.abs(remainingSms) / pricedZone.getUnitDeduction();
-                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableSms));
+                                    currentCdrCharge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableSms));
                                     customer.setSmsUnits(0L);
-                                    customer.setRorUsage(customer.getRorUsage().add(charge));
+                                    customer.setRorUsage(customer.getRorUsage().add(currentCdrCharge));
                                 }
                             } else {
-                                // No SMS units available, charge the full count
-                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(smsCount));
-                                customer.setRorUsage(customer.getRorUsage().add(charge));
+                                // No SMS units available
+                                currentCdrCharge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(smsCount));
+                                customer.setRorUsage(customer.getRorUsage().add(currentCdrCharge));
                             }
+                            
                             rated.setRoundedDuration(smsCount);
                             rated.setUnitsUsage(smsCount);
-                            rated.setRorUsage(customer.getRorUsage());
-                            break;
+                            rated.setRorUsage(currentCdrCharge); // FIXED
+                        }
                           
-                        case 3: // DATA
+                        case 3 -> {
+                            // DATA
                             long usageMB = ratingEngine.bytesToMB(cdr.getDurationVolume());
 
                             if (customer.getDataUnits() > 0) {
@@ -171,22 +177,22 @@ public class RatingEngine {
                                 } else {
                                     // Partial consumption
                                     long chargeableMB = Math.abs(remainingUnits);
-                                    BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableMB));
+                                    currentCdrCharge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(chargeableMB));
                                     customer.setDataUnits(0L);
-                                    customer.setRorUsage(customer.getRorUsage().add(charge));
+                                    customer.setRorUsage(customer.getRorUsage().add(currentCdrCharge));
                                 }
                             } else {
-                                BigDecimal charge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(usageMB));
-                                customer.setRorUsage(customer.getRorUsage().add(charge));
+                                // No Data units available
+                                currentCdrCharge = pricedZone.getPricePerVolume().multiply(BigDecimal.valueOf(usageMB));
+                                customer.setRorUsage(customer.getRorUsage().add(currentCdrCharge));
                             }
+                            
                             rated.setRoundedDuration(usageMB);
                             rated.setUnitsUsage(usageMB);
-                            rated.setRorUsage(customer.getRorUsage());
-                            break;
+                            rated.setRorUsage(currentCdrCharge); // FIXED
+                        }
 
-
-                        default:
-                            System.out.println("Unknown service");
+                        default -> System.out.println("Unknown service ID detected.");
                     }
                     ratedCdrBatch.add(rated);
 

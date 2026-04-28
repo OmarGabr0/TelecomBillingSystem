@@ -31,10 +31,8 @@ public class DataLoader {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-<<<<<<< HEAD
-=======
+
     return contractMap;
->>>>>>> b12a4384fa3ffc70a1b9d34b874f854fdfc22d3d
     }
     
 }
