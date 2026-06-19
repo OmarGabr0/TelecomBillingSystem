@@ -211,7 +211,7 @@ function viewInvoices(email, name, offset = 0) {
                     <td style="font-weight:bold;">${inv.total.toFixed(2)} EGP</td>
                     <td style="color:${statusColor}; font-weight:bold;">${inv.status}</td>
                     <td>
-                        <a href="https://github.com/OmarGabr0/TelecomBillingSystem/tree/main/AggregationEngine/${inv.pdf_path}" target="_blank" style="padding: 5px 10px; background: #2ecc71; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">
+                        <a href="../AggregationEngine/${inv.pdf_path}" target="_blank" style="padding: 5px 10px; background: #2ecc71; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">
                            📥 Download
                         </a>
                     </td>

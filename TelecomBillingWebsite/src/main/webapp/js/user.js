@@ -158,7 +158,7 @@ function navigate(page) {
                 createDoughnut(`dataChart-${p.msisdn}`, p.data_units, p.total_data, '#10b981', '#d1fae5');
                 createDoughnut(`smsChart-${p.msisdn}`, p.sms_units, p.total_sms, '#f59e0b', '#fef3c7');
                 createDoughnut(`freeChart-${p.msisdn}`, p.free_units, p.total_free, '#6366f1', '#e0e7ff');
-                createDoughnut(`creditChart-${p.msisdn}`, p.credit_limit - p.ror_usage, p.credit_limit, '#be123c', '#fecdd3');
+                createDoughnut(`creditChart-${p.msisdn}`, p.ror_usage, p.credit_limit, '#be123c', '#fecdd3');
             });
         }
 
@@ -306,7 +306,7 @@ function loadInvoices(offset = 0) {
                     <td style="font-weight:bold;">${inv.total.toFixed(2)} EGP</td>
                     <td style="color:${statusColor}; font-weight:bold;">${inv.status}</td>
                     <td>
-                        <a href="https://github.com/OmarGabr0/TelecomBillingSystem/tree/main/AggregationEngine/${inv.pdf_path}" target="_blank" style="padding: 5px 10px; background: #2ecc71; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">
+                        <a href="../AggregationEngine/${inv.pdf_path}" target="_blank" style="padding: 5px 10px; background: #2ecc71; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">
                            📥 PDF
                         </a>
                     </td>
